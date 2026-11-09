@@ -79,8 +79,8 @@ bash D:/workbuddy/docs/hexo-deploy.sh
 本机直连 GitHub 的 22 / 443 端口会被 reset。用 `D:\workbuddy\docs\ssh-https-proxy.py` 做 HTTP CONNECT 隧道，复用已验证的 ED25519 密钥，**无需 token**（本机 `git credential fill` 取不到凭据，所以没走 API 部署那条路）。
 
 ```bash
-# 代理端口以 echo $HTTPS_PROXY 为准
-git config core.sshCommand 'ssh -p 443 -o ProxyCommand="python D:/workbuddy/docs/ssh-https-proxy.py 127.0.0.1 62939 ssh.github.com 443"'
+# 隧道脚本自动从 HTTPS_PROXY 读取代理地址，端口变化无需改配置
+git config core.sshCommand 'ssh -p 443 -o ProxyCommand="python D:/workbuddy/docs/ssh-https-proxy.py ssh.github.com 443"'
 git remote add origin ssh://git@ssh.github.com:443/cuishili-git/ai-agent.git
 ```
 
