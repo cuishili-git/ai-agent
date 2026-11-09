@@ -17,7 +17,7 @@ GitHub Pages 用 `Deploy from a branch` → `gh-pages` / `(root)`。实测推送
 
 | 标题 | 栏目 | 分类 |
 |---|---|---|
-| 如何开发一个 WorkBuddy Skill：从需求到打包的完整复盘 | `Skill开发` | 技术笔记 / WorkBuddy |
+| 从零开发一个 WorkBuddy Skill：新手一步一步做到上线 | `Skill开发` | 技术笔记 / WorkBuddy |
 | Git 登录与 Hexo 博文自动发布 | `技术随笔` | 技术笔记 / Git |
 
 ## 一条命令发布

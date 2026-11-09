@@ -1,5 +1,5 @@
 ---
-title: "如何开发一个 WorkBuddy Skill：从需求到打包的完整复盘"
+title: "从零开发一个 WorkBuddy Skill：新手一步一步做到上线"
 date: 2026-11-09 13:13:26
 categories:
   - "技术笔记"
@@ -9,209 +9,523 @@ tags:
   - "workbuddy"
   - "hexo"
   - "教程"
+  - "新人向"
 ---
-> 这是一次真实开发的复盘：从一句「帮我做个 skill」的需求，到 13 项自检全过、打包可分发，最后**用这个 skill 自己把自己写成博客文章并推送到 GitHub**。文末附完整命令。
+> 这篇是写给**从没写过 Skill 的人**的。不要求你懂 Hexo、YAML、Git 分支或 GitHub Pages——这些名词第一次出现时都会先解释。
+>
+> 跟着做完，你会得到：① 一个能被 WorkBuddy 认出来并调用的 Skill；② 一个能打包发给同事的 zip；③ 一篇用这个 Skill 生成、并且**真的能在浏览器打开**的博客文章。
+>
+> 每一步都写清「敲什么命令」「应该看到什么」「没看到怎么办」。凡是要换成你自己路径的地方，都用 `你的…` 标出来了。
 
-## 一、先搞清楚 Skill 到底是什么
+## 第 0 步：先看懂整条路线
 
-WorkBuddy 里的 Skill 不是插件，也不是需要注册到某个中心的服务。它本质上就是**一个目录**，目录里必须有 `SKILL.md`，文件开头是 YAML front-matter：
+别急着敲命令。先把这张图记住，后面每一步都知道自己在哪：
+
+```
+  ① 写 Skill             ② 用 Skill          ③ 生成网页           ④ 放到网上
+┌──────────────┐      ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│ 一个文件夹    │      │ 一段 md 正文 │    │ Hexo         │    │ GitHub Pages │
+│ SKILL.md     │ ───> │    变成      │ ─> │ md → html    │ ─> │ 给你一个网址 │
+│ + 脚本       │      │ 带标题的文章 │    │ public/      │    │ 别人能打开   │
+└──────────────┘      └──────────────┘    └──────────────┘    └──────────────┘
+```
+
+四个名词的大白话：
+
+| 名词 | 是什么 | 在这里干嘛 |
+|---|---|---|
+| **Skill** | 就是**一个文件夹**，里面放一份叫 `SKILL.md` 的说明书，外加可选的脚本 | 我们要做的东西 |
+| **SKILL.md** | 说明书。开头几行是「身份证」（叫 front-matter），后面是操作步骤 | 告诉 WorkBuddy 遇到什么话、该按什么步骤做 |
+| **Hexo** | 一个把 Markdown 变成 HTML 网页的工具 | 把文章变成网页 |
+| **GitHub Pages** | GitHub 提供的免费静态网页托管 | 让网页有个能打开的网址 |
+
+**最容易混的一点**：GitHub 不会帮你把 `.md` 变成网页，Hexo 也不会帮你把网页放到网上。它们之间唯一的交接物是**一堆生成好的 HTML 文件**。整篇教程的后半段，就是在搬这堆文件。
+
+## 第 1 步：确认工具齐全（2 分钟）
+
+打开 **Git Bash**（开始菜单搜 Git Bash，别用 cmd），逐条敲：
+
+```bash
+node -v
+npm -v
+python --version
+git --version
+ls -1 ~/.workbuddy/skills
+```
+
+**应该看到**：四个版本号（Node 18 以上就行）、以及 skills 目录里已有的技能名（目录不存在或空的也正常）。
+
+**没看到怎么办**：缺哪个装哪个；`~/.workbuddy/skills` 不存在就建一个：
+
+```bash
+mkdir -p ~/.workbuddy/skills
+```
+
+> 为什么先体检：后面每一步都依赖这些命令。做到一半才发现没装 Node，回头重装会打乱节奏。
+
+## 第 2 步：用三行话写清需求
+
+拿我们真实要做的东西举例。原始需求只有一句：
+
+> 「我想对 WorkBuddy 说一句话，它就把一段对话内容写成一篇带标题、带栏目的博客文章。」
+
+动手前，把它拆成三行：
+
+| | 内容 |
+|---|---|
+| **输入** | 一段文字或 `.md` 文件、标题、栏目、标签 |
+| **输出** | `source/_posts/栏目/标题.md`，开头带 front-matter |
+| **明确不做** | 不自动发布到网上——发布是不可撤销的外部动作，必须你另外明确说 |
+
+**新手最常犯的错**：一上来就写脚本。先花两分钟写清这三行，后面每个参数、每个开关都有依据，不容易返工。
+
+## 第 3 步：用官方脚手架生成骨架
+
+WorkBuddy 自带 `skill-creator`，里面有初始化脚本，别自己手写目录结构：
+
+```bash
+python "你的WorkBuddy安装目录/resources/.../skills/skill-creator/scripts/init_skill.py" \
+  hexo-blog-publisher --path ~/.workbuddy/skills
+```
+
+找不到这个脚本？用文件管理器在 WorkBuddy 安装目录下搜 `init_skill.py`，把搜到的完整路径粘进来即可。本机实测路径是：
+
+```
+D:/software/workbuddy/resources/app.asar.unpacked/resources/plugins/workbuddy-builtin/skills/skill-creator/scripts/init_skill.py
+```
+
+**应该看到**：生成出这样一个目录
+
+```
+~/.workbuddy/skills/hexo-blog-publisher/
+├── SKILL.md                    ← 说明书（核心）
+├── scripts/example.py          ← 示例，删
+├── references/api_reference.md ← 示例，删
+└── assets/example_asset.txt    ← 示例，删
+```
+
+生成完**第一件事是把示例文件删掉**：
+
+```bash
+D=~/.workbuddy/skills/hexo-blog-publisher
+rm -f "$D/scripts/example.py" "$D/references/api_reference.md" "$D/assets/example_asset.txt"
+rmdir "$D/assets" 2>/dev/null || true
+```
+
+> 为什么放 `~/.workbuddy/skills/`：这是**用户级**目录，所有项目都能用。若放某个项目里的 `.workbuddy/skills/`，就只有那个项目能用。新手一律选用户级。
+
+## 第 4 步：写 SKILL.md 的「身份证」
+
+打开 `SKILL.md`，最上面这几行就是 front-matter（用 `---` 包起来的元数据）：
 
 ```yaml
 ---
 name: hexo-blog-publisher
-description: Turns local conversation records, chat exports or markdown files into Hexo blog posts with a chosen title, categories, tags and column sub-directory. This skill should be used when a user asks to push, publish or archive conversation content to a Hexo blog...
+description: 把本地对话内容、聊天导出或 Markdown 文件写成 Hexo 博文，支持指定标题、分类、标签与栏目子目录。当用户要求把对话内容发布/归档到 Hexo 博客、按指定栏目创建文章，或把生成的文章分享给团队时使用。
 agent_created: true
 ---
 ```
 
-关键在于 `description`：它决定了**这个 skill 什么时候会被加载**。WorkBuddy 不会把所有 skill 一股脑塞进上下文，而是先扫描所有 `name` + `description`，判断当前请求是否命中，命中才把 SKILL.md 正文读进来。
+三个字段：
 
-由此得出两条设计纪律：
-
-| 纪律 | 为什么 |
+| 字段 | 作用 |
 |---|---|
-| `description` 写「触发场景」，不写「功能清单」 | 模型靠语义匹配决定是否加载。写「一个用于发布的工具」，用户说「把刚才的对话发到博客」时未必命中；要写清「当用户要求把对话内容发布/归档到 Hexo 博客、按指定栏目创建文章时使用」 |
-| SKILL.md 正文写给**执行者**看，不是写给用户看 | 它是一份指令集：步骤顺序、参数含义、安全边界、出错怎么办。用户看到的是最终产出，不是这份文档 |
+| `name` | 技能名字，跟文件夹名一致 |
+| `description` | **最关键**，决定 WorkBuddy 会不会「想起」这个技能 |
+| `agent_created` | 标记这是 AI 辅助创建的，保留即可 |
 
-`scripts/`、`references/`、`assets/` 都是可选目录：脚本放可执行代码，参考资料放按需才读的细节（避免 SKILL.md 无限膨胀），静态资源单独放。
+**为什么 `description` 最关键**：WorkBuddy 不会把所有 Skill 一股脑读进上下文，而是先扫所有 `name` + `description`，判断当前这句话要不要用它，命中了才读正文。所以必须写**用户会怎么说**，而不是写功能清单：
 
-## 二、需求落地前，先把边界划清楚
-
-原始需求只有一句：「开发一个 skill，调用 hexo 博客工具，推送本地对话内容到博客，支持自定义栏目和标题」。
-
-这句话里有三个歧义，不动手消解，写出来的东西大概率返工：
-
-| 歧义 | 处理方式 |
+| 写法 | 用户说「把刚才的对话发到博客」时能命中吗 |
 |---|---|
-| 「栏目」指什么 | Hexo 里至少三层：`categories` 分类链、`tags` 标签、`source/_posts` 下的子目录。**三层全支持**，做成三个独立参数，可叠加 |
-| 「本地对话内容」指什么 | 当前会话整理稿、本地 `.md` 文件、直接传入的文本、stdin —— **四种来源都收** |
-| 「推送」是写到本地，还是发布到公网 | **默认只写文章文件**。`generate` / `deploy` / `git push` / 云端上传全做成显式开关，部署与推送还要二次确认 |
+| `一个用于发布的工具` | ❌ 太抽象，匹配不上 |
+| `当用户要求把对话内容发布/归档到 Hexo 博客、按指定栏目创建文章时使用` | ✅ |
 
-最后一条是安全边界，不是偷懒。把「发布到公开站点」设成默认行为，等于用户一句模糊的话就能触发不可撤销的外部动作。这条纪律在任何涉及外部系统的工具里都该保持。
+> 顺带解释 YAML：`---` 只是「下面几行是元数据」的标记；`键: 值` 就是给这个技能填表。不需要懂更多。
 
-## 三、环境体检跑在写第一行代码之前
+## 第 5 步：写 SKILL.md 正文（给 AI 看的操作手册）
 
-```bash
-node --version; npm --version
-hexo --version
-ls -d /d/workbuddy/docs
-ls -1 ~/.workbuddy/skills
-find /d/workbuddy -maxdepth 5 -name "_config.yml" -not -path "*/node_modules/*"
-```
+身份证下面开始写正文。照这个最小模板填：
 
-实测：Node v22.22.2、npm 10.9.7 都在，文档目录在，但**没装全局 hexo，本机也找不到任何现成的 Hexo 项目**。
+```markdown
+# Hexo 博文发布
 
-这个结果直接改变了架构决策：
+## 用途
+一句话说清能干什么、默认不干什么。
 
-- 博客根目录不能写死，必须做成参数（`-b` 或环境变量 `HEXO_BLOG_ROOT`），否则换台机器就废；
-- **「写文章」根本不需要 hexo 命令** —— 只是生成一个 `.md` 文件，只有 `generate` / `deploy` 才需要 hexo CLI。把两件事拆开，后面才能在没有博客项目的机器上先把内容跑通。
+## 触发场景
+| 用户说法 | 执行哪些步骤 |
+|---|---|
+| 「把刚才的对话发到博客」 | 步骤 1-5，只写本地文件 |
+| 「发到 XX 栏目，标题叫 XX」 | 步骤 3 带上 --path / --title |
+| 「顺便部署上线」 | 步骤 7，必须先确认 |
 
-## 四、骨架用官方脚本生成，别手写
+## 步骤 1：定位博客根目录
+（每步给一条能直接复制的命令）
 
-skill-creator 自带 `init_skill.py`：
+## 步骤 2：整理内容
+……
 
-```bash
-python <skill-creator>/scripts/init_skill.py hexo-blog-publisher --path ~/.workbuddy/skills
-```
-
-它生成合规目录结构和带 `agent_created: true` 的 SKILL.md 模板。手写容易漏 front-matter 字段，也容易装错层级 —— **用户级**（`~/.workbuddy/skills/`）才跨所有项目可用，项目级只在当前工作区生效。
-
-生成完第一件事：**删掉示例文件**（`scripts/example.py`、`references/api_reference.md`、`assets/example_asset.txt`）。留着它们打包校验也能过，但分发出去是一堆无关文件。
-
-## 五、核心脚本：把 Windows 的坑提前埋进代码
-
-`scripts/publish_post.js` 用 Node 写，只用内置 `fs` + `child_process`，零第三方依赖。
-
-参数设计：
-
+## 参数表
 | 参数 | 作用 |
+……
+
+## 安全边界
+默认只写本地文章；构建、部署、推送、上传都要用户明确要求。
+
+## 常见坑
+（把踩过的坑逐条写这里）
+```
+
+两条写正文的规矩：
+
+1. **这是写给执行者（AI）看的，不是写给用户看的**。每步都要能直接复制执行，别写「配置好相关参数」这种空话。
+2. **把「不该做的事」写明**。比如「默认只写文件，不自动部署」——发布到公开站点不可逆，把它设成默认行为很危险。
+
+## 第 6 步：写脚本（先做一个能跑的最小版）
+
+新建 `scripts/publish_post.js`。先别追求面面俱到，下面这版只用 Node 内置模块，复制就能跑：
+
+```javascript
+const fs = require('fs');
+const path = require('path');
+
+function arg(flag, fallback) {
+  const i = process.argv.indexOf(flag);
+  return i >= 0 ? process.argv[i + 1] : fallback;
+}
+
+const blogRoot = arg('-b', process.env.HEXO_BLOG_ROOT);
+const title    = arg('-t', null);
+const srcFile  = arg('-f', null);
+const column   = arg('-p', '');
+
+if (!blogRoot || !title || !srcFile) {
+  console.error('用法: node publish_post.js -b <博客根目录> -t <标题> -f <正文.md> [-p <栏目>]');
+  process.exit(1);
+}
+
+// 1) 读正文：去 BOM、统一换行，否则 front-matter 会失效
+let body = fs.readFileSync(srcFile, 'utf8')
+  .replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
+
+// 2) 拼 front-matter。JSON.stringify 负责把引号、冒号转义成合法 YAML 字符串
+const q = s => JSON.stringify(String(s));
+const d = new Date(), pad = n => String(n).padStart(2, '0');
+const date = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ` +
+             `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+const text = ['---', 'title: ' + q(title), 'date: ' + date, '---', '', body].join('\n');
+
+// 3) 算目标路径，并拦住「../」跳出自录
+const posts = path.resolve(blogRoot, 'source', '_posts');
+const target = path.resolve(posts, column, title.replace(/[\\/:*?"<>|]/g, '-') + '.md');
+if (!target.startsWith(posts + path.sep)) {
+  console.error('栏目路径非法（不能跳出 _posts）');
+  process.exit(1);
+}
+
+// 4) 防覆盖：已存在就拒绝，除非显式 --force
+if (fs.existsSync(target) && process.argv.indexOf('--force') < 0) {
+  console.error('文件已存在，加 --force 才允许覆盖: ' + target);
+  process.exit(1);
+}
+fs.mkdirSync(path.dirname(target), { recursive: true });
+fs.writeFileSync(target, text, 'utf8');
+console.log('[ok] ' + target);
+```
+
+四个看起来「多余」的地方，都是真出过事的：
+
+| 代码 | 不写会怎样 |
 |---|---|
-| `-b, --blog-root` | 博客根目录；缺省读 `HEXO_BLOG_ROOT` |
-| `-t, --title` | 文章标题，自动做 YAML 转义 |
-| `-f, --content-file` | 正文来源文件（另支持 `--content`、`--stdin`） |
-| `--category` / `--tag` | 逗号分隔的分类链与标签 |
-| `-p, --path` | `_posts` 下的栏目子目录 |
-| `--share-copy` | 额外产出「在线阅读版」 |
-| `--generate` / `--deploy` / `--push` | 显式开启的动作，后两者需 `--confirm-*` |
-| `--json` / `--check` / `--dry-run` | 机器可读输出、环境体检、只看不写 |
+| 去 BOM / 转 LF | Windows 记事本存的 md，开头的 `---` 认不出来 |
+| `JSON.stringify` 转义 | 标题里有 `:` 或 `"` 时 YAML 直接解析失败 |
+| 检查 `posts + path.sep` | 栏目填 `../../Windows` 会把文件写到博客目录外 |
+| 防覆盖 | 一篇写好的文章被静默覆盖，找不回来 |
 
-真正花时间的不是参数解析，是这几处防御：
+## 第 7 步：在临时目录里先跑通
 
-**① front-matter 转义。** 标题里出现冒号、引号、`#`、换行，直接拼进 YAML 就会炸或者被解释成注释。统一用双引号 + 转义（等价 `JSON.stringify` 的字符串规则），`categories` / `tags` 逐项处理。
-
-**② 路径穿越。** `--path ../../Windows/System32` 如果不校验，文章会写到博客目录外。做法：`path.resolve` 之后强制检查目标是否仍在 `<blogRoot>/source/_posts` 之下，越界直接拒绝。
-
-**③ 防覆盖。** 目标文件已存在就报错退出，除非显式 `--force`。博客文章一旦被静默覆盖，内容找不回来。
-
-**④ `source` 目录污染。** 「在线阅读版」是给人读的副本，绝不能放进 `source/`，否则 Hexo 会当成第二篇文章生成。脚本里硬拦这个路径。
-
-**⑤ BOM / CRLF。** Windows 产生的 `.md` 常带 UTF-8 BOM 和 CRLF，BOM 会让 front-matter 的 `---` 识别失败。读入统一清洗。
-
-**⑥ 状态日志与数据分流。** `--json` 模式下 stdout 必须是**纯 JSON**，任何 `[ok] ...` 日志都改走 stderr，否则下游 `JSON.parse` 直接崩。
-
-**⑦ hexo CLI 定位。** 顺序为：`--hexo-cmd` 显式指定 → 项目内 `node_modules/.bin/hexo.cmd` → 全局 `hexo`。每个候选执行 `version` 探测并**加超时**，把「命令找不到」和「构建失败」区分开。找不到时 `--check` 给出完整尝试列表，而不是丢一句模糊报错。
-
-## 六、需求中途变了：加一条在线共享通道
-
-开发过程中用户追加：「最好能推送到 WorkBuddy 上面，大家都能用」。
-
-这里有个必须处理的细节：**Hexo 原文不能直接传上去**。那段 `--- / title: / date:` 在在线文档里会原样显示成一段 YAML 文本，阅读体验很糟。于是新增 `--share-copy`，生成「在线阅读版」：剥掉 front-matter、标题转成 H1、分类标签转成一行元信息。
-
-同时查资料库空间权限，得到一个很现实的结论：唯一的团队空间角色是 **reader（只读）**，个人空间才是 owner 可写。所以「放进空间 = 大家都能看」这个假设不成立。跨系统集成时，权限模型要**先查再设计**，不能靠想当然。最终 SKILL.md 里把两种落地方式（争取团队空间写权限 / 改走公开页面）都写清，由用户选。
-
-## 七、自检：三个真实踩过的坑
-
-写了一个独立自检脚本，在临时沙盒目录里跑，不碰任何真实博客。13 项覆盖：中文标题与多级分类、front-matter 转义、BOM/CRLF 清理、防覆盖、路径穿越拦截、部署保护、在线阅读版、`source` 污染拦截等。
-
-| 坑 | 现象 | 根因 | 修法 |
-|---|---|---|---|
-| `npx.cmd` 挂住 | 自检第一项通过后，整个进程被系统超时终止 | Windows 上 `npx.cmd --no-install hexo version` 不返回，且当时探测没加超时 | 从探测链移除（本来就是冗余候选：项目装了 hexo 走本地 `.bin` 即可），并给所有探测加 8 秒超时 |
-| `--json` 的 stdout 混进日志 | 下游 `JSON.parse` 报错 | `[ok] ...` 状态日志走了 stdout | 所有状态日志改走 stderr，stdout 只留 JSON |
-| 在线文档顶部出现原始 YAML | 页面显示 `--- / title: / date:` | Hexo front-matter 不是标准 Markdown 内容 | 生成独立的在线阅读版，剥 front-matter + 标题转 H1 |
-
-第一个坑值得单独说：**自检脚本自己也需要超时保护**。被测对象挂住时，如果测试驱动没有超时，表现就是「测试莫名片卡死」，很容易误判成环境问题。这轮是先单独把候选命令逐个 `spawnSync` 加 timeout 复现，才定位到具体是哪一条命令。
-
-## 八、SKILL.md 怎么写才好用
-
-正文按「触发场景表 → 编号步骤 → 参数表 → 安全边界 → 常见坑」组织：
-
-- **触发场景表**：把用户的口语说法映射到具体步骤编号。比如「顺便部署上线」→ 步骤 7 且需逐个确认；「帮我看看博客环境通不通」→ 只跑 `--check`。让执行者不必每次重新推理该做哪几步。
-- **编号步骤**：每步给可以直接复制的命令，不写「配置好相关参数」这种空话。
-- **安全边界**：单独成节，写死「默认只写本地；任何外部动作需显式要求」。
-- **常见坑**：把上面三个坑和 Windows 编码、凭据管理器旧条目、`insteadOf` 地址改写等一并写进去。
-
-## 九、打包与分发
+**不要拿真实博客做第一次试验**。造一个假的：
 
 ```bash
-python <skill-creator>/scripts/package_skill.py ~/.workbuddy/skills/hexo-blog-publisher <输出目录>
+SB=/tmp/hexo-demo
+mkdir -p "$SB/source/_posts"
+echo "title: demo" > "$SB/_config.yml"
+echo "这是我的第一篇文章正文。" > "$SB/正文.md"
+
+node ~/.workbuddy/skills/hexo-blog-publisher/scripts/publish_post.js \
+  -b "$SB" -t "我的第一篇" -f "$SB/正文.md" -p 新手村
 ```
 
-校验通过后会产出 zip。别人把包导入自己的 WorkBuddy，就能用同一套发布流程 —— 这是「大家都能用」的另一种解释（分发工具，而不是分发内容）。
+**应该看到**：`[ok] /tmp/hexo-demo/source/_posts/新手村/我的第一篇.md`
 
-另外补了一个 `hexo-publish.cmd` 包装器给不想敲长命令的场景，里面先 `chcp 65001` 解决 cmd 默认 GBK 把 UTF-8 中文帮助显示成乱码的问题。
+再打开确认内容：
 
-## 十、闭环：用这个 skill 发布这篇博客
-
-最有力的验证是拿真实任务跑一遍。这次的流程是：
-
-1. 把「开发 skill 的全过程」整理成纯正文 Markdown（就是本文，无 front-matter）；
-2. 调用刚写好的脚本，指定标题、分类、标签、栏目子目录，生成 `source/_posts/Skill开发/如何开发一个-workbuddy-skill.md`；
-3. 本地独立仓库 `git init -b main`，只在这个仓库里设提交身份（**不动全局配置**）；
-4. `git add -A && git commit`；
-5. `git remote add origin` + `git push -u origin main`。
-
-这里有个很隐蔽的坑：全局配置里有一条
-
-```
-url.https://github.com/.insteadof = git@github.com:
+```bash
+cat "$SB/source/_posts/新手村/我的第一篇.md"
 ```
 
-它会把 `git@github.com:用户名/仓库.git` 这种 scp 风格地址**悄悄改写成 HTTPS**，改完之后 SSH 密钥不参与，转而要求输入令牌，表现就是「明明配好了密钥却突然要密码」。绕开办法是不改全局配置，直接用 `ssh://git@ssh.github.com:443/...` 或 `ssh://git@github.com/...` 形式 —— 前者不匹配 `insteadOf` 规则，且走 443 端口，还能顺带避开网络封 22 的情况。
+开头必须是：
 
-**结论**：能自己发布自己的工具，才算真的跑通了闭环。
+```yaml
+---
+title: "我的第一篇"
+date: 2026-11-09 14:00:00
+---
+```
 
-## 十一、可复用的方法论清单
+**没看到 `---`**：多半是正文文件带了 BOM，回到第 6 步检查去 BOM 那段。
 
-| # | 做法 | 原因 |
+## 第 8 步：补一份自检，把「不该发生的」也测一遍
+
+新手容易只测「正常情况」。至少再测这四件事：
+
+| 测什么 | 怎么测 | 期望 |
 |---|---|---|
-| 1 | 先跑只读环境体检，再写第一行代码 | 环境结论会直接改变架构（本项目就是「不写死博客根目录」） |
-| 2 | `description` 写触发场景 | 决定 skill 会不会被加载，是命中率的关键 |
-| 3 | 需求歧义用「全支持 + 安全默认」消解 | 少打断用户，又不牺牲边界 |
-| 4 | 外部动作默认关闭，高危动作二次确认 | 发布、部署、推送都不可逆 |
-| 5 | 自检要覆盖「不该发生的事」 | 防覆盖、路径穿越、`source` 污染比正常路径更容易出事 |
-| 6 | 被测对象和测试驱动都要有超时 | 否则挂住时只会看到「莫名卡死」 |
-| 7 | stdout 只放机器可读数据，日志走 stderr | 任何脚本被管道消费时的通用纪律 |
-| 8 | 跨系统集成先查权限模型 | 「放进去 = 大家能看」经常不成立 |
-| 9 | 最后拿真实任务跑一遍闭环 | 单元测试全过 ≠ 真实场景能用 |
+| 标题带冒号引号 | `-t 'A: "B"'` | 生成的文件里 YAML 仍是合法字符串 |
+| 重复运行 | 同一命令跑两次 | 第二次**报错**并提示文件已存在 |
+| 路径穿越 | `-p ../../etc` | 直接拒绝 |
+| 只预览不写 | 加 `--dry-run`（如果你实现了） | 不产生文件 |
 
-## 附：完整命令
+写一个 `selftest.js` 挨个断言即可。本机那版跑了 13 项，包括 BOM/CRLF、防覆盖、`--force`、部署保护等。
+
+> 这一条是分水岭：能跑通正常流程 ≠ 别人乱输参数时不会出事。
+
+## 第 9 步：打包，发给同事
 
 ```bash
-# 1. 生成骨架
-python <skill-creator>/scripts/init_skill.py hexo-blog-publisher --path ~/.workbuddy/skills
-
-# 2. 环境体检
-node ~/.workbuddy/skills/hexo-blog-publisher/scripts/publish_post.js \
-  -b "博客根目录" --check --json
-
-# 3. 写文章（默认只写本地）
-node ~/.workbuddy/skills/hexo-blog-publisher/scripts/publish_post.js \
-  -b "博客根目录" -t "文章标题" -f "正文.md" \
-  --category 技术笔记,WorkBuddy --tag skill,workbuddy \
-  -p Skill开发 --share-copy "在线阅读版.md" --json
-
-# 4. 自检 / 打包
-node <docs>/hexo-publish-selftest.js
-python <skill-creator>/scripts/package_skill.py \
-  ~/.workbuddy/skills/hexo-blog-publisher <输出目录>
-
-# 5. 推送到独立远端仓库
-git -C "博客根目录" init -b main
-git -C "博客根目录" config user.name "你的账号"
-git -C "博客根目录" config user.email "账号绑定邮箱"
-git -C "博客根目录" add -A && git -C "博客根目录" commit -m "post: 新增文章"
-git -C "博客根目录" remote add origin ssh://git@ssh.github.com:443/用户名/仓库.git
-git -C "博客根目录" push -u origin main
+python "你的WorkBuddy安装目录/.../skill-creator/scripts/package_skill.py" \
+  ~/.workbuddy/skills/hexo-blog-publisher "你的输出目录"
 ```
 
-> 一点提醒：`push` 上去只是**源码存档**，不等于有网页。要让仓库变成能访问的博客，还需在仓库 Settings → Pages 配置构建；且非 `用户名.github.io` 的仓库会发布到子路径，`_config.yml` 里要补 `root: /仓库名/`，否则样式全丢。
+**应该看到**：校验通过 + 生成一个 `hexo-blog-publisher.zip`。别人把这个包导入自己的 WorkBuddy，就能用同一套流程。
+
+到这里，**Skill 本身已经做完并上线可用了**。下面两步是「用它产出东西，并把东西真正发布到网上」。
+
+## 第 10 步：用一次自己的 Skill
+
+现在可以直接在 WorkBuddy 对话里说：
+
+> 「把这段对话整理成博文，发到 `Skill开发` 栏目，标题叫《从零开发一个 WorkBuddy Skill》」
+
+也可以直接跑命令（效果一样）：
+
+```bash
+node ~/.workbuddy/skills/hexo-blog-publisher/scripts/publish_post.js \
+  -b "D:/workbuddy/docs/out/blog" \
+  -t "从零开发一个 WorkBuddy Skill：新手一步一步做到上线" \
+  -f "正文.md" \
+  --category 技术笔记,WorkBuddy --tag skill,workbuddy -p Skill开发
+```
+
+产出的是一个 `.md` 文件，**它还不是网页**。
+
+## 第 11 步：Hexo 把 md 变成网页
+
+### 11.1 建 `package.json`
+
+在博客根目录新建 `package.json`：
+
+```json
+{
+  "name": "my-blog",
+  "private": true,
+  "dependencies": {
+    "hexo": "^8.1.2",
+    "hexo-generator-archive": "^2.0.0",
+    "hexo-generator-category": "^2.0.0",
+    "hexo-generator-index": "^4.0.0",
+    "hexo-generator-tag": "^2.0.0",
+    "hexo-renderer-ejs": "^2.0.0",
+    "hexo-renderer-marked": "^7.0.1",
+    "hexo-renderer-stylus": "^3.0.1",
+    "hexo-server": "^3.0.0",
+    "hexo-theme-landscape": "^1.1.0"
+  },
+  "hexo": { "version": "8.1.2" }
+}
+```
+
+> ⚠️ **最下面那个 `"hexo"` 字段千万不能删**。删了以后 `hexo generate` 不报错、只打印一屏帮助文本，看起来像成功，其实 `public/` 还是旧的。这是最坑新手的一个静默失败。
+
+### 11.2 装依赖
+
+```bash
+cd "你的博客根目录"
+npm install --registry=https://registry.npmmirror.com --no-audit --no-fund
+```
+
+官方源慢或超时时，用上面这个国内镜像。本机 32 秒装完 243 个包。
+
+### 11.3 最小 `_config.yml`
+
+```yaml
+title: 我的技术笔记
+author: 你的名字
+language: zh-CN
+timezone: 'Asia/Shanghai'
+url: https://你的用户名.github.io/你的仓库名
+root: /你的仓库名/          # 只有 <用户名>.github.io 这种仓库才写 /
+permalink: :year/:month/:day/:title/
+theme: landscape
+```
+
+| 配置项 | 写错的后果 |
+|---|---|
+| `url` | 站点里所有绝对链接、RSS 指错域 |
+| `root` | 项目仓库的 Pages 挂在子路径，少了它 CSS/JS 全部 404、页面没样式 |
+| `permalink` | 决定文章网址。**建站后再改，所有旧链接失效** |
+
+### 11.4 生成并验收
+
+```bash
+cd "你的博客根目录"
+node_modules/.bin/hexo.cmd clean
+node_modules/.bin/hexo.cmd generate
+```
+
+**应该看到**：`INFO  20 files generated in 300 ms` 这一类输出。判断成功的唯一依据是**有没有 `generated` 这个词**，不是看数字大小（`0 files generated` 也可能正常），也不是只看退出码。
+
+> Windows 必须用 `hexo.cmd`，不能用 `node_modules/.bin/hexo`（那是给 Linux/macOS 的，会报 WinError 193）。
+
+再看产物：
+
+```
+public/
+├── index.html          ← 首页
+├── 2026/11/09/…/index.html  ← 每篇文章一页
+├── archives/  categories/  tags/
+├── css/  js/  fancybox/
+└── .nojekyll           ← 见下
+```
+
+**必须补一个空的 `.nojekyll`**：GitHub Pages 默认会跑 Jekyll，它会忽略下划线开头的目录，Hexo 产物容易缺东西。而 `hexo clean` 会把这个文件删掉，所以**每次 generate 后都要重写**：
+
+```bash
+: > public/.nojekyll
+```
+
+想先在本机看看长什么样：
+
+```bash
+node_modules/.bin/hexo.cmd server    # 打开 http://localhost:4000/你的仓库名/
+```
+
+## 第 12 步：发布到 GitHub Pages
+
+### 12.1 网页上建仓库
+
+打开 https://github.com/new，填仓库名（例如 `ai-agent`），选 Public，**「Add a README」「Add .gitignore」「Choose a license」三项一个都别勾**。
+
+> 为什么别勾：勾了远端会自带一个初始提交，和你本地的第一次提交没有共同祖先，第一次 push 必然被拒，还得硬合。空仓库最干净。
+
+### 12.2 源码和产物分两个分支
+
+这是新手最容易搞乱的地方，记住一句话：**`main` 放你写的 md，`gh-pages` 放 Hexo 生成的 html**。
+
+```bash
+cd "你的博客根目录"
+git init -b main
+git config user.name "你的账号"          # 只在这个仓库生效，不改全局
+git config user.email "账号绑定邮箱"
+git add -A
+git commit -m "post: 第一篇文章"
+git remote add origin ssh://git@ssh.github.com:443/你的用户名/你的仓库名.git
+git push -u origin main
+```
+
+然后把 `public/` 单独推到 `gh-pages`（用一个临时目录，避免切分支时动到源码）：
+
+```bash
+TMP=$(mktemp -d)
+cp -r public/. "$TMP/"
+git -C "$TMP" init -b gh-pages -q
+git -C "$TMP" config user.name "你的账号"
+git -C "$TMP" config user.email "账号绑定邮箱"
+git -C "$TMP" remote add origin ssh://git@ssh.github.com:443/你的用户名/你的仓库名.git
+git -C "$TMP" add -A
+git -C "$TMP" commit -m "deploy: 静态站点"
+git -C "$TMP" push -f origin gh-pages
+```
+
+推完 `gh-pages` 分支，GitHub 通常会**自动启用 Pages**（在仓库 Settings → Pages 里能看到 Source 是 `Deploy from a branch / gh-pages / (root)`；没自动启用就手动选一下）。
+
+> 为什么 `-f` 强制推：每次都是全新的孤立提交，和远端没有共同祖先。这是产物分支，本来就是「`public/` 的完整镜像」，覆盖是预期行为。**只对 `gh-pages` 用，别对 `main` 用**。
+
+### 12.3 打开网址验收
+
+站点地址格式：
+
+```
+https://你的用户名.github.io/你的仓库名/
+```
+
+```bash
+curl -sS -L -o /dev/null -w "%{http_code}\n" https://你的用户名.github.io/你的仓库名/
+```
+
+- `404` → 还在构建，**等 30~90 秒，不要重复发布**（这是最常见的误操作）
+- `200` → 起来了
+
+**但 200 还不够**：空页面、模板页也可能返回 200。再抓一次首页 HTML，确认里面有你的站名、文章标题、以及 `/你的仓库名/css/style.css`：
+
+```bash
+curl -sS -L https://你的用户名.github.io/你的仓库名/ | grep -o "你的文章标题"
+```
+
+全中才说明内容真的渲染出来了。
+
+### 12.4 以后每次发文只要一条命令
+
+把 11.4 + 12.2 固化成一个脚本（本机放在 `D:/workbuddy/docs/hexo-deploy.sh`），以后：
+
+```bash
+bash hexo-deploy.sh
+```
+
+改文章 → 跑脚本 → 等半分钟 → 网页更新。这就是整套流程的终点。
+
+## 第 13 步：日常维护与常见错误
+
+| 现象 | 原因 | 怎么修 |
+|---|---|---|
+| `hexo generate` 只打印帮助、不报错 | `package.json` 少了 `"hexo"` 字段 | 补回该字段 |
+| `Author identity unknown` | 没配 `user.name` / `user.email` | 在仓库里配两条 `git config` |
+| `non-fast-forward` / push 被拒 | 建仓库时勾了 README，或忘加 `-f` 推产物分支 | 空仓库重来；只对 `gh-pages` 用 `-f` |
+| 页面没样式、CSS 404 | `_config.yml` 少 `root: /仓库名/` | 补上重新生成 |
+| 突然要求输密码/令牌 | SSH 地址被 `insteadOf` 规则改写成 HTTPS | 用 `ssh://git@ssh.github.com:443/...` 形式，不匹配该规则 |
+| 命令行粘贴令牌没反应 | 输密码时屏幕本就不回显 | 照常粘贴回车即可 |
+| 改了文章，网页没变 | 没跑 `clean` + `generate`，或没重新推 `gh-pages` | 跑一遍发布脚本 |
+| 提交成功但页面 404 | Pages 还在构建 | 等，别重复发布 |
+| 网页上直接改的 HTML 被冲掉 | 产物分支是 `public/` 的镜像，全量覆盖 | 改 `source/_posts/` 里的 md，重新发布 |
+
+## 术语速查
+
+| 词 | 大白话 |
+|---|---|
+| front-matter | 文章开头 `---` 包住的几行元数据（标题、日期、分类、标签） |
+| YAML | 一种「键: 值」的填表格式，front-matter 和 `_config.yml` 都用它 |
+| 产物 / `public/` | Hexo 生成的那一堆 HTML、CSS、JS |
+| 分支 | 同一仓库里并行的两份内容；这里 `main` 存源码、`gh-pages` 存产物 |
+| Pages | GitHub 把某个分支当静态网站发布出来的功能 |
+| PAT / 令牌 | 网站密码的替代品，HTTPS 方式推代码时要用；本流程走 SSH 密钥，用不上 |
+| `.nojekyll` | 一个空文件，告诉 Pages「别用 Jekyll 加工，原样发」 |
+
+## 完成检查清单
+
+- [ ] `node/npm/python/git` 都能打印版本号
+- [ ] `~/.workbuddy/skills/xxx/SKILL.md` 有 `name` / `description` / `agent_created`
+- [ ] `description` 写的是「用户会怎么说」
+- [ ] 示例文件已删
+- [ ] 脚本在临时目录跑通，生成的文件开头是 `---`
+- [ ] 重复运行会拒绝覆盖、路径穿越会被拦
+- [ ] 打包校验通过，拿到 zip
+- [ ] 用 Skill 生成了一篇真实文章
+- [ ] `hexo generate` 输出里有 `generated`
+- [ ] `public/` 里有 `index.html` 和 `.nojekyll`
+- [ ] `main` 和 `gh-pages` 都推上去了
+- [ ] 网址返回 200，且页面里能搜到文章标题
+
+---
+
+一句话收尾：**Skill 只是一个带说明书的文件夹；Hexo 只负责把 md 变 HTML；GitHub Pages 只负责把 HTML 发出去。** 把这三件事分开，哪一步出错就查哪一步，不用整条链路重来。
