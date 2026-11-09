@@ -1,0 +1,11 @@
+title: 老崔的技术笔记
+subtitle: ''
+description: 对话整理与技术笔记
+author: cuishili-git
+language: zh-CN
+timezone: Asia/Shanghai
+source_dir: source
+public_dir: public
+default_layout: post
+new_post_name: :title.md
+permalink: :year/:month/:day/:title/
