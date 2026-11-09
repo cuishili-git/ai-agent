@@ -1,11 +1,19 @@
-title: 老崔的技术笔记
-subtitle: ''
-description: 对话整理与技术笔记
+title: AI Agent 与 Skill 开发笔记
+subtitle: '把工具链的开发过程写成文章'
+description: 'WorkBuddy Skill / AI Agent 工具链的开发复盘、踩坑记录与实操笔记'
 author: cuishili-git
 language: zh-CN
 timezone: Asia/Shanghai
+
 source_dir: source
 public_dir: public
 default_layout: post
 new_post_name: :title.md
 permalink: :year/:month/:day/:title/
+
+# 本仓库不是「用户名.github.io」，Pages 会挂在子路径 /ai-agent/ 下。
+# 缺了 root 会导致生成的 CSS / JS 路径指向站点根，表现为样式全丢、页面 404。
+# 本地 hexo server 预览时访问 http://localhost:4000/ai-agent/；
+# 若只想在本机根路径预览，临时注释掉下面两行即可。
+url: https://cuishili-git.github.io/ai-agent
+root: /ai-agent/
