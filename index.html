@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>AI Agent 与 Skill 开发笔记</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="WorkBuddy Skill &#x2F; AI Agent 工具链的开发复盘、踩坑记录与实操笔记">
+<meta property="og:type" content="website">
+<meta property="og:title" content="AI Agent 与 Skill 开发笔记">
+<meta property="og:url" content="https://cuishili-git.github.io/ai-agent/index.html">
+<meta property="og:site_name" content="AI Agent 与 Skill 开发笔记">
+<meta property="og:description" content="WorkBuddy Skill &#x2F; AI Agent 工具链的开发复盘、踩坑记录与实操笔记">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="cuishili-git">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/ai-agent/atom.xml" title="AI Agent 与 Skill 开发笔记" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/ai-agent/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/ai-agent/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/ai-agent/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fork-awesome@1.2.0/css/fork-awesome.min.css">
+
+<meta name="generator" content="Hexo 8.1.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/ai-agent/" id="logo">AI Agent 与 Skill 开发笔记</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/ai-agent/" id="subtitle">把工具链的开发过程写成文章</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/ai-agent/">Home</a>
+        
+          <a class="main-nav-link" href="/ai-agent/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/ai-agent/atom.xml" title="RSS 订阅"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="搜索"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://cuishili-git.github.io/ai-agent"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-Skill开发/如何开发一个-workbuddy-skill从需求到打包的完整复盘" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/ai-agent/2026/11/09/Skill%E5%BC%80%E5%8F%91/%E5%A6%82%E4%BD%95%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA-workbuddy-skill%E4%BB%8E%E9%9C%80%E6%B1%82%E5%88%B0%E6%89%93%E5%8C%85%E7%9A%84%E5%AE%8C%E6%95%B4%E5%A4%8D%E7%9B%98/" class="article-date">
+  <time class="dt-published" datetime="2026-11-09T05:13:26.000Z" itemprop="datePublished">2026-11-09</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/ai-agent/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/">技术笔记</a>►<a class="article-category-link" href="/ai-agent/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/WorkBuddy/">WorkBuddy</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/ai-agent/2026/11/09/Skill%E5%BC%80%E5%8F%91/%E5%A6%82%E4%BD%95%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA-workbuddy-skill%E4%BB%8E%E9%9C%80%E6%B1%82%E5%88%B0%E6%89%93%E5%8C%85%E7%9A%84%E5%AE%8C%E6%95%B4%E5%A4%8D%E7%9B%98/">从零开发一个 WorkBuddy Skill：新手一步一步做到上线</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p>这篇是写给<strong>从没写过 Skill 的人</strong>的。不要求你懂 Hexo、YAML、Git 分支或 GitHub Pages——这些名词第一次出现时都会先解释。</p>
+<p>跟着做完，你会得到：① 一个能被 WorkBuddy 认出来并调用的 Skill；② 一个能打包发给同事的 zip；③ 一篇用这个 Skill 生成、并且<strong>真的能在浏览器打开</strong>的博客文章。</p>
+<p>每一步都写清「敲什么命令」「应该看到什么」「没看到怎么办」。凡是要换成你自己路径的地方，都用 <code>你的…</code> 标出来了。</p>
+</blockquote>
+<h2 id="第-0-步：先看懂整条路线"><a href="#第-0-步：先看懂整条路线" class="headerlink" title="第 0 步：先看懂整条路线"></a>第 0 步：先看懂整条路线</h2><p>别急着敲命令。先把这张图记住，后面每一步都知道自己在哪：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">  ① 写 Skill             ② 用 Skill          ③ 生成网页           ④ 放到网上</span><br><span class="line">┌──────────────┐      ┌──────────────┐    ┌──────────────┐    ┌──────────────┐</span><br><span class="line">│ 一个文件夹    │      │ 一段 md 正文 │    │ Hexo         │    │ GitHub Pages │</span><br><span class="line">│ SKILL.md     │ ───&gt; │    变成      │ ─&gt; │ md → html    │ ─&gt; │ 给你一个网址 │</span><br><span class="line">│ + 脚本       │      │ 带标题的文章 │    │ public/      │    │ 别人能打开   │</span><br><span class="line">└──────────────┘      └──────────────┘    └──────────────┘    └──────────────┘</span><br></pre></td></tr></table></figure>
+
+<p>四个名词的大白话：</p>
+<table>
+<thead>
+<tr>
+<th>名词</th>
+<th>是什么</th>
+<th>在这里干嘛</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Skill</strong></td>
+<td>就是<strong>一个文件夹</strong>，里面放一份叫 <code>SKILL.md</code> 的说明书，外加可选的脚本</td>
+<td>我们要做的东西</td>
+</tr>
+<tr>
+<td><strong>SKILL.md</strong></td>
+<td>说明书。开头几行是「身份证」（叫 front-matter），后面是操作步骤</td>
+<td>告诉 WorkBuddy 遇到什么话、该按什么步骤做</td>
+</tr>
+<tr>
+<td><strong>Hexo</strong></td>
+<td>一个把 Markdown 变成 HTML 网页的工具</td>
+<td>把文章变成网页</td>
+</tr>
+<tr>
+<td><strong>GitHub Pages</strong></td>
+<td>GitHub 提供的免费静态网页托管</td>
+<td>让网页有个能打开的网址</td>
+</tr>
+</tbody></table>
+<p><strong>最容易混的一点</strong>：GitHub 不会帮你把 <code>.md</code> 变成网页，Hexo 也不会帮你把网页放到网上。它们之间唯一的交接物是<strong>一堆生成好的 HTML 文件</strong>。整篇教程的后半段，就是在搬这堆文件。</p>
+<h2 id="第-1-步：确认工具齐全（2-分钟）"><a href="#第-1-步：确认工具齐全（2-分钟）" class="headerlink" title="第 1 步：确认工具齐全（2 分钟）"></a>第 1 步：确认工具齐全（2 分钟）</h2><p>打开 <strong>Git Bash</strong>（开始菜单搜 Git Bash，别用 cmd），逐条敲：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">node -v</span><br><span class="line">npm -v</span><br><span class="line">python --version</span><br><span class="line">git --version</span><br><span class="line"><span class="built_in">ls</span> -1 ~/.workbuddy/skills</span><br></pre></td></tr></table></figure>
+
+<p><strong>应该看到</strong>：四个版本号（Node 18 以上就行）、以及 skills 目录里已有的技能名（目录不存在或空的也正常）。</p>
+<p><strong>没看到怎么办</strong>：缺哪个装哪个；<code>~/.workbuddy/skills</code> 不存在就建一个：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p ~/.workbuddy/skills</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>为什么先体检：后面每一步都依赖这些命令。做到一半才发现没装 Node，回头重装会打乱节奏。</p>
+</blockquote>
+<h2 id="第-2-步：用三行话写清需求"><a href="#第-2-步：用三行话写清需求" class="headerlink" title="第 2 步：用三行话写清需求"></a>第 2 步：用三行话写清需求</h2><p>拿我们真实要做的东西举例。原始需求只有一句：</p>
+<blockquote>
+<p>「我想对 WorkBuddy 说一句话，它就把一段对话内容写成一篇带标题、带栏目的博客文章。」</p>
+</blockquote>
+<p>动手前，把它拆成三行：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>输入</strong></td>
+<td>一段文字或 <code>.md</code> 文件、标题、栏目、标签</td>
+</tr>
+<tr>
+<td><strong>输出</strong></td>
+<td><code>source/_posts/栏目/标题.md</code>，开头带 front-matter</td>
+</tr>
+<tr>
+<td><strong>明确不做</strong></td>
+<td>不自动发布到网上——发布是不可撤销的外部动作，必须你另外明确说</td>
+</tr>
+</tbody></table>
+<p><strong>新手最常犯的错</strong>：一上来就写脚本。先花两分钟写清这三行，后面每个参数、每个开关都有依据，不容易返工。</p>
+<h2 id="第-3-步：用官方脚手架生成骨架"><a href="#第-3-步：用官方脚手架生成骨架" class="headerlink" title="第 3 步：用官方脚手架生成骨架"></a>第 3 步：用官方脚手架生成骨架</h2><p>WorkBuddy 自带 <code>skill-creator</code>，里面有初始化脚本，别自己手写目录结构：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">python <span class="string">&quot;你的WorkBuddy安装目录/resources/.../skills/skill-creator/scripts/init_skill.py&quot;</span> \</span><br><span class="line">  hexo-blog-publisher --path ~/.workbuddy/skills</span><br></pre></td></tr></table></figure>
+
+<p>找不到这个脚本？用文件管理器在 WorkBuddy 安装目录下搜 <code>init_skill.py</code>，把搜到的完整路径粘进来即可。本机实测路径是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">D:/software/workbuddy/resources/app.asar.unpacked/resources/plugins/workbuddy-builtin/skills/skill-creator/scripts/init_skill.py</span><br></pre></td></tr></table></figure>
+
+<p><strong>应该看到</strong>：生成出这样一个目录</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">~/.workbuddy/skills/hexo-blog-publisher/</span><br><span class="line">├── SKILL.md                    ← 说明书（核心）</span><br><span class="line">├── scripts/example.py          ← 示例，删</span><br><span class="line">├── references/api_reference.md ← 示例，删</span><br><span class="line">└── assets/example_asset.txt    ← 示例，删</span><br></pre></td></tr></table></figure>
+
+<p>生成完<strong>第一件事是把示例文件删掉</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">D=~/.workbuddy/skills/hexo-blog-publisher</span><br><span class="line"><span class="built_in">rm</span> -f <span class="string">&quot;<span class="variable">$D</span>/scripts/example.py&quot;</span> <span class="string">&quot;<span class="variable">$D</span>/references/api_reference.md&quot;</span> <span class="string">&quot;<span class="variable">$D</span>/assets/example_asset.txt&quot;</span></span><br><span class="line"><span class="built_in">rmdir</span> <span class="string">&quot;<span class="variable">$D</span>/assets&quot;</span> 2&gt;/dev/null || <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>为什么放 <code>~/.workbuddy/skills/</code>：这是<strong>用户级</strong>目录，所有项目都能用。若放某个项目里的 <code>.workbuddy/skills/</code>，就只有那个项目能用。新手一律选用户级。</p>
+</blockquote>
+<h2 id="第-4-步：写-SKILL-md-的「身份证」"><a href="#第-4-步：写-SKILL-md-的「身份证」" class="headerlink" title="第 4 步：写 SKILL.md 的「身份证」"></a>第 4 步：写 SKILL.md 的「身份证」</h2><p>打开 <code>SKILL.md</code>，最上面这几行就是 front-matter（用 <code>---</code> 包起来的元数据）：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">name:</span> <span class="string">hexo-blog-publisher</span></span><br><span class="line"><span class="attr">description:</span> <span class="string">把本地对话内容、聊天导出或</span> <span class="string">Markdown</span> <span class="string">文件写成</span> <span class="string">Hexo</span> <span class="string">博文，支持指定标题、分类、标签与栏目子目录。当用户要求把对话内容发布/归档到</span> <span class="string">Hexo</span> <span class="string">博客、按指定栏目创建文章，或把生成的文章分享给团队时使用。</span></span><br><span class="line"><span class="attr">agent_created:</span> <span class="literal">true</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
+
+<p>三个字段：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>name</code></td>
+<td>技能名字，跟文件夹名一致</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><strong>最关键</strong>，决定 WorkBuddy 会不会「想起」这个技能</td>
+</tr>
+<tr>
+<td><code>agent_created</code></td>
+<td>标记这是 AI 辅助创建的，保留即可</td>
+</tr>
+</tbody></table>
+<p><strong>为什么 <code>description</code> 最关键</strong>：WorkBuddy 不会把所有 Skill 一股脑读进上下文，而是先扫所有 <code>name</code> + <code>description</code>，判断当前这句话要不要用它，命中了才读正文。所以必须写<strong>用户会怎么说</strong>，而不是写功能清单：</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>用户说「把刚才的对话发到博客」时能命中吗</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>一个用于发布的工具</code></td>
+<td>❌ 太抽象，匹配不上</td>
+</tr>
+<tr>
+<td><code>当用户要求把对话内容发布/归档到 Hexo 博客、按指定栏目创建文章时使用</code></td>
+<td>✅</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>顺带解释 YAML：<code>---</code> 只是「下面几行是元数据」的标记；<code>键: 值</code> 就是给这个技能填表。不需要懂更多。</p>
+</blockquote>
+<h2 id="第-5-步：写-SKILL-md-正文（给-AI-看的操作手册）"><a href="#第-5-步：写-SKILL-md-正文（给-AI-看的操作手册）" class="headerlink" title="第 5 步：写 SKILL.md 正文（给 AI 看的操作手册）"></a>第 5 步：写 SKILL.md 正文（给 AI 看的操作手册）</h2><p>身份证下面开始写正文。照这个最小模板填：</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="section"># Hexo 博文发布</span></span><br><span class="line"></span><br><span class="line"><span class="section">## 用途</span></span><br><span class="line">一句话说清能干什么、默认不干什么。</span><br><span class="line"></span><br><span class="line"><span class="section">## 触发场景</span></span><br><span class="line">| 用户说法 | 执行哪些步骤 |</span><br><span class="line">|---|---|</span><br><span class="line">| 「把刚才的对话发到博客」 | 步骤 1-5，只写本地文件 |</span><br><span class="line">| 「发到 XX 栏目，标题叫 XX」 | 步骤 3 带上 --path / --title |</span><br><span class="line">| 「顺便部署上线」 | 步骤 7，必须先确认 |</span><br><span class="line"></span><br><span class="line"><span class="section">## 步骤 1：定位博客根目录</span></span><br><span class="line">（每步给一条能直接复制的命令）</span><br><span class="line"></span><br><span class="line"><span class="section">## 步骤 2：整理内容</span></span><br><span class="line">……</span><br><span class="line"></span><br><span class="line"><span class="section">## 参数表</span></span><br><span class="line">| 参数 | 作用 |</span><br><span class="line">……</span><br><span class="line"></span><br><span class="line"><span class="section">## 安全边界</span></span><br><span class="line">默认只写本地文章；构建、部署、推送、上传都要用户明确要求。</span><br><span class="line"></span><br><span class="line"><span class="section">## 常见坑</span></span><br><span class="line">（把踩过的坑逐条写这里）</span><br></pre></td></tr></table></figure>
+
+<p>两条写正文的规矩：</p>
+<ol>
+<li><strong>这是写给执行者（AI）看的，不是写给用户看的</strong>。每步都要能直接复制执行，别写「配置好相关参数」这种空话。</li>
+<li><strong>把「不该做的事」写明</strong>。比如「默认只写文件，不自动部署」——发布到公开站点不可逆，把它设成默认行为很危险。</li>
+</ol>
+<h2 id="第-6-步：写脚本（先做一个能跑的最小版）"><a href="#第-6-步：写脚本（先做一个能跑的最小版）" class="headerlink" title="第 6 步：写脚本（先做一个能跑的最小版）"></a>第 6 步：写脚本（先做一个能跑的最小版）</h2><p>新建 <code>scripts/publish_post.js</code>。先别追求面面俱到，下面这版只用 Node 内置模块，复制就能跑：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> fs = <span class="built_in">require</span>(<span class="string">&#x27;fs&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">&#x27;path&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">arg</span>(<span class="params">flag, fallback</span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> i = process.<span class="property">argv</span>.<span class="title function_">indexOf</span>(flag);</span><br><span class="line">  <span class="keyword">return</span> i &gt;= <span class="number">0</span> ? process.<span class="property">argv</span>[i + <span class="number">1</span>] : fallback;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> blogRoot = <span class="title function_">arg</span>(<span class="string">&#x27;-b&#x27;</span>, process.<span class="property">env</span>.<span class="property">HEXO_BLOG_ROOT</span>);</span><br><span class="line"><span class="keyword">const</span> title    = <span class="title function_">arg</span>(<span class="string">&#x27;-t&#x27;</span>, <span class="literal">null</span>);</span><br><span class="line"><span class="keyword">const</span> srcFile  = <span class="title function_">arg</span>(<span class="string">&#x27;-f&#x27;</span>, <span class="literal">null</span>);</span><br><span class="line"><span class="keyword">const</span> column   = <span class="title function_">arg</span>(<span class="string">&#x27;-p&#x27;</span>, <span class="string">&#x27;&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (!blogRoot || !title || !srcFile) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">error</span>(<span class="string">&#x27;用法: node publish_post.js -b &lt;博客根目录&gt; -t &lt;标题&gt; -f &lt;正文.md&gt; [-p &lt;栏目&gt;]&#x27;</span>);</span><br><span class="line">  process.<span class="title function_">exit</span>(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 1) 读正文：去 BOM、统一换行，否则 front-matter 会失效</span></span><br><span class="line"><span class="keyword">let</span> body = fs.<span class="title function_">readFileSync</span>(srcFile, <span class="string">&#x27;utf8&#x27;</span>)</span><br><span class="line">  .<span class="title function_">replace</span>(<span class="regexp">/^\uFEFF/</span>, <span class="string">&#x27;&#x27;</span>).<span class="title function_">replace</span>(<span class="regexp">/\r\n/g</span>, <span class="string">&#x27;\n&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 2) 拼 front-matter。JSON.stringify 负责把引号、冒号转义成合法 YAML 字符串</span></span><br><span class="line"><span class="keyword">const</span> <span class="title function_">q</span> = s =&gt; <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(<span class="title class_">String</span>(s));</span><br><span class="line"><span class="keyword">const</span> d = <span class="keyword">new</span> <span class="title class_">Date</span>(), pad = <span class="function"><span class="params">n</span> =&gt;</span> <span class="title class_">String</span>(n).<span class="title function_">padStart</span>(<span class="number">2</span>, <span class="string">&#x27;0&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> date = <span class="string">`<span class="subst">$&#123;d.getFullYear()&#125;</span>-<span class="subst">$&#123;pad(d.getMonth()+<span class="number">1</span>)&#125;</span>-<span class="subst">$&#123;pad(d.getDate())&#125;</span> `</span> +</span><br><span class="line">             <span class="string">`<span class="subst">$&#123;pad(d.getHours())&#125;</span>:<span class="subst">$&#123;pad(d.getMinutes())&#125;</span>:<span class="subst">$&#123;pad(d.getSeconds())&#125;</span>`</span>;</span><br><span class="line"><span class="keyword">const</span> text = [<span class="string">&#x27;---&#x27;</span>, <span class="string">&#x27;title: &#x27;</span> + <span class="title function_">q</span>(title), <span class="string">&#x27;date: &#x27;</span> + date, <span class="string">&#x27;---&#x27;</span>, <span class="string">&#x27;&#x27;</span>, body].<span class="title function_">join</span>(<span class="string">&#x27;\n&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 3) 算目标路径，并拦住「../」跳出自录</span></span><br><span class="line"><span class="keyword">const</span> posts = path.<span class="title function_">resolve</span>(blogRoot, <span class="string">&#x27;source&#x27;</span>, <span class="string">&#x27;_posts&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> target = path.<span class="title function_">resolve</span>(posts, column, title.<span class="title function_">replace</span>(<span class="regexp">/[\\/:*?&quot;&lt;&gt;|]/g</span>, <span class="string">&#x27;-&#x27;</span>) + <span class="string">&#x27;.md&#x27;</span>);</span><br><span class="line"><span class="keyword">if</span> (!target.<span class="title function_">startsWith</span>(posts + path.<span class="property">sep</span>)) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">error</span>(<span class="string">&#x27;栏目路径非法（不能跳出 _posts）&#x27;</span>);</span><br><span class="line">  process.<span class="title function_">exit</span>(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 4) 防覆盖：已存在就拒绝，除非显式 --force</span></span><br><span class="line"><span class="keyword">if</span> (fs.<span class="title function_">existsSync</span>(target) &amp;&amp; process.<span class="property">argv</span>.<span class="title function_">indexOf</span>(<span class="string">&#x27;--force&#x27;</span>) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">error</span>(<span class="string">&#x27;文件已存在，加 --force 才允许覆盖: &#x27;</span> + target);</span><br><span class="line">  process.<span class="title function_">exit</span>(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line">fs.<span class="title function_">mkdirSync</span>(path.<span class="title function_">dirname</span>(target), &#123; <span class="attr">recursive</span>: <span class="literal">true</span> &#125;);</span><br><span class="line">fs.<span class="title function_">writeFileSync</span>(target, text, <span class="string">&#x27;utf8&#x27;</span>);</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;[ok] &#x27;</span> + target);</span><br></pre></td></tr></table></figure>
+
+<p>四个看起来「多余」的地方，都是真出过事的：</p>
+<table>
+<thead>
+<tr>
+<th>代码</th>
+<th>不写会怎样</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>去 BOM &#x2F; 转 LF</td>
+<td>Windows 记事本存的 md，开头的 <code>---</code> 认不出来</td>
+</tr>
+<tr>
+<td><code>JSON.stringify</code> 转义</td>
+<td>标题里有 <code>:</code> 或 <code>&quot;</code> 时 YAML 直接解析失败</td>
+</tr>
+<tr>
+<td>检查 <code>posts + path.sep</code></td>
+<td>栏目填 <code>../../Windows</code> 会把文件写到博客目录外</td>
+</tr>
+<tr>
+<td>防覆盖</td>
+<td>一篇写好的文章被静默覆盖，找不回来</td>
+</tr>
+</tbody></table>
+<h2 id="第-7-步：在临时目录里先跑通"><a href="#第-7-步：在临时目录里先跑通" class="headerlink" title="第 7 步：在临时目录里先跑通"></a>第 7 步：在临时目录里先跑通</h2><p><strong>不要拿真实博客做第一次试验</strong>。造一个假的：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">SB=/tmp/hexo-demo</span><br><span class="line"><span class="built_in">mkdir</span> -p <span class="string">&quot;<span class="variable">$SB</span>/source/_posts&quot;</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;title: demo&quot;</span> &gt; <span class="string">&quot;<span class="variable">$SB</span>/_config.yml&quot;</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;这是我的第一篇文章正文。&quot;</span> &gt; <span class="string">&quot;<span class="variable">$SB</span>/正文.md&quot;</span></span><br><span class="line"></span><br><span class="line">node ~/.workbuddy/skills/hexo-blog-publisher/scripts/publish_post.js \</span><br><span class="line">  -b <span class="string">&quot;<span class="variable">$SB</span>&quot;</span> -t <span class="string">&quot;我的第一篇&quot;</span> -f <span class="string">&quot;<span class="variable">$SB</span>/正文.md&quot;</span> -p 新手村</span><br></pre></td></tr></table></figure>
+
+<p><strong>应该看到</strong>：<code>[ok] /tmp/hexo-demo/source/_posts/新手村/我的第一篇.md</code></p>
+<p>再打开确认内容：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> <span class="string">&quot;<span class="variable">$SB</span>/source/_posts/新手村/我的第一篇.md&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>开头必须是：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">&quot;我的第一篇&quot;</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2026-11-09 14:00:00</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>没看到 <code>---</code></strong>：多半是正文文件带了 BOM，回到第 6 步检查去 BOM 那段。</p>
+<h2 id="第-8-步：补一份自检，把「不该发生的」也测一遍"><a href="#第-8-步：补一份自检，把「不该发生的」也测一遍" class="headerlink" title="第 8 步：补一份自检，把「不该发生的」也测一遍"></a>第 8 步：补一份自检，把「不该发生的」也测一遍</h2><p>新手容易只测「正常情况」。至少再测这四件事：</p>
+<table>
+<thead>
+<tr>
+<th>测什么</th>
+<th>怎么测</th>
+<th>期望</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>标题带冒号引号</td>
+<td><code>-t &#39;A: &quot;B&quot;&#39;</code></td>
+<td>生成的文件里 YAML 仍是合法字符串</td>
+</tr>
+<tr>
+<td>重复运行</td>
+<td>同一命令跑两次</td>
+<td>第二次<strong>报错</strong>并提示文件已存在</td>
+</tr>
+<tr>
+<td>路径穿越</td>
+<td><code>-p ../../etc</code></td>
+<td>直接拒绝</td>
+</tr>
+<tr>
+<td>只预览不写</td>
+<td>加 <code>--dry-run</code>（如果你实现了）</td>
+<td>不产生文件</td>
+</tr>
+</tbody></table>
+<p>写一个 <code>selftest.js</code> 挨个断言即可。本机那版跑了 13 项，包括 BOM&#x2F;CRLF、防覆盖、<code>--force</code>、部署保护等。</p>
+<blockquote>
+<p>这一条是分水岭：能跑通正常流程 ≠ 别人乱输参数时不会出事。</p>
+</blockquote>
+<h2 id="第-9-步：打包，发给同事"><a href="#第-9-步：打包，发给同事" class="headerlink" title="第 9 步：打包，发给同事"></a>第 9 步：打包，发给同事</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">python <span class="string">&quot;你的WorkBuddy安装目录/.../skill-creator/scripts/package_skill.py&quot;</span> \</span><br><span class="line">  ~/.workbuddy/skills/hexo-blog-publisher <span class="string">&quot;你的输出目录&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>应该看到</strong>：校验通过 + 生成一个 <code>hexo-blog-publisher.zip</code>。别人把这个包导入自己的 WorkBuddy，就能用同一套流程。</p>
+<p>到这里，<strong>Skill 本身已经做完并上线可用了</strong>。下面两步是「用它产出东西，并把东西真正发布到网上」。</p>
+<h2 id="第-10-步：用一次自己的-Skill"><a href="#第-10-步：用一次自己的-Skill" class="headerlink" title="第 10 步：用一次自己的 Skill"></a>第 10 步：用一次自己的 Skill</h2><p>现在可以直接在 WorkBuddy 对话里说：</p>
+<blockquote>
+<p>「把这段对话整理成博文，发到 <code>Skill开发</code> 栏目，标题叫《从零开发一个 WorkBuddy Skill》」</p>
+</blockquote>
+<p>也可以直接跑命令（效果一样）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">node ~/.workbuddy/skills/hexo-blog-publisher/scripts/publish_post.js \</span><br><span class="line">  -b <span class="string">&quot;D:/workbuddy/docs/out/blog&quot;</span> \</span><br><span class="line">  -t <span class="string">&quot;从零开发一个 WorkBuddy Skill：新手一步一步做到上线&quot;</span> \</span><br><span class="line">  -f <span class="string">&quot;正文.md&quot;</span> \</span><br><span class="line">  --category 技术笔记,WorkBuddy --tag skill,workbuddy -p Skill开发</span><br></pre></td></tr></table></figure>
+
+<p>产出的是一个 <code>.md</code> 文件，<strong>它还不是网页</strong>。</p>
+<h2 id="第-11-步：Hexo-把-md-变成网页"><a href="#第-11-步：Hexo-把-md-变成网页" class="headerlink" title="第 11 步：Hexo 把 md 变成网页"></a>第 11 步：Hexo 把 md 变成网页</h2><h3 id="11-1-建-package-json"><a href="#11-1-建-package-json" class="headerlink" title="11.1 建 package.json"></a>11.1 建 <code>package.json</code></h3><p>在博客根目录新建 <code>package.json</code>：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;my-blog&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;private&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;dependencies&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;hexo&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^8.1.2&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;hexo-generator-archive&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^2.0.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;hexo-generator-category&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^2.0.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;hexo-generator-index&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^4.0.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;hexo-generator-tag&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^2.0.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;hexo-renderer-ejs&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^2.0.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;hexo-renderer-marked&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^7.0.1&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;hexo-renderer-stylus&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^3.0.1&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;hexo-server&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^3.0.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;hexo-theme-landscape&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^1.1.0&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;hexo&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span> <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;8.1.2&quot;</span> <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>⚠️ <strong>最下面那个 <code>&quot;hexo&quot;</code> 字段千万不能删</strong>。删了以后 <code>hexo generate</code> 不报错、只打印一屏帮助文本，看起来像成功，其实 <code>public/</code> 还是旧的。这是最坑新手的一个静默失败。</p>
+</blockquote>
+<h3 id="11-2-装依赖"><a href="#11-2-装依赖" class="headerlink" title="11.2 装依赖"></a>11.2 装依赖</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> <span class="string">&quot;你的博客根目录&quot;</span></span><br><span class="line">npm install --registry=https://registry.npmmirror.com --no-audit --no-fund</span><br></pre></td></tr></table></figure>
+
+<p>官方源慢或超时时，用上面这个国内镜像。本机 32 秒装完 243 个包。</p>
+<h3 id="11-3-最小-config-yml"><a href="#11-3-最小-config-yml" class="headerlink" title="11.3 最小 _config.yml"></a>11.3 最小 <code>_config.yml</code></h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">title:</span> <span class="string">我的技术笔记</span></span><br><span class="line"><span class="attr">author:</span> <span class="string">你的名字</span></span><br><span class="line"><span class="attr">language:</span> <span class="string">zh-CN</span></span><br><span class="line"><span class="attr">timezone:</span> <span class="string">&#x27;Asia/Shanghai&#x27;</span></span><br><span class="line"><span class="attr">url:</span> <span class="string">https://你的用户名.github.io/你的仓库名</span></span><br><span class="line"><span class="attr">root:</span> <span class="string">/你的仓库名/</span>          <span class="comment"># 只有 &lt;用户名&gt;.github.io 这种仓库才写 /</span></span><br><span class="line"><span class="attr">permalink:</span> <span class="string">:year/:month/:day/:title/</span></span><br><span class="line"><span class="attr">theme:</span> <span class="string">landscape</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>配置项</th>
+<th>写错的后果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>url</code></td>
+<td>站点里所有绝对链接、RSS 指错域</td>
+</tr>
+<tr>
+<td><code>root</code></td>
+<td>项目仓库的 Pages 挂在子路径，少了它 CSS&#x2F;JS 全部 404、页面没样式</td>
+</tr>
+<tr>
+<td><code>permalink</code></td>
+<td>决定文章网址。<strong>建站后再改，所有旧链接失效</strong></td>
+</tr>
+</tbody></table>
+<h3 id="11-4-生成并验收"><a href="#11-4-生成并验收" class="headerlink" title="11.4 生成并验收"></a>11.4 生成并验收</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> <span class="string">&quot;你的博客根目录&quot;</span></span><br><span class="line">node_modules/.bin/hexo.cmd clean</span><br><span class="line">node_modules/.bin/hexo.cmd generate</span><br></pre></td></tr></table></figure>
+
+<p><strong>应该看到</strong>：<code>INFO  20 files generated in 300 ms</code> 这一类输出。判断成功的唯一依据是<strong>有没有 <code>generated</code> 这个词</strong>，不是看数字大小（<code>0 files generated</code> 也可能正常），也不是只看退出码。</p>
+<blockquote>
+<p>Windows 必须用 <code>hexo.cmd</code>，不能用 <code>node_modules/.bin/hexo</code>（那是给 Linux&#x2F;macOS 的，会报 WinError 193）。</p>
+</blockquote>
+<p>再看产物：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public/</span><br><span class="line">├── index.html          ← 首页</span><br><span class="line">├── 2026/11/09/…/index.html  ← 每篇文章一页</span><br><span class="line">├── archives/  categories/  tags/</span><br><span class="line">├── css/  js/  fancybox/</span><br><span class="line">└── .nojekyll           ← 见下</span><br></pre></td></tr></table></figure>
+
+<p><strong>必须补一个空的 <code>.nojekyll</code></strong>：GitHub Pages 默认会跑 Jekyll，它会忽略下划线开头的目录，Hexo 产物容易缺东西。而 <code>hexo clean</code> 会把这个文件删掉，所以<strong>每次 generate 后都要重写</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">: &gt; public/.nojekyll</span><br></pre></td></tr></table></figure>
+
+<p>想先在本机看看长什么样：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">node_modules/.bin/hexo.cmd server    <span class="comment"># 打开 http://localhost:4000/你的仓库名/</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="第-12-步：发布到-GitHub-Pages"><a href="#第-12-步：发布到-GitHub-Pages" class="headerlink" title="第 12 步：发布到 GitHub Pages"></a>第 12 步：发布到 GitHub Pages</h2><h3 id="12-1-网页上建仓库"><a href="#12-1-网页上建仓库" class="headerlink" title="12.1 网页上建仓库"></a>12.1 网页上建仓库</h3><p>打开 <a target="_blank" rel="noopener" href="https://github.com/new%EF%BC%8C%E5%A1%AB%E4%BB%93%E5%BA%93%E5%90%8D%EF%BC%88%E4%BE%8B%E5%A6%82">https://github.com/new，填仓库名（例如</a> <code>ai-agent</code>），选 Public，<strong>「Add a README」「Add .gitignore」「Choose a license」三项一个都别勾</strong>。</p>
+<blockquote>
+<p>为什么别勾：勾了远端会自带一个初始提交，和你本地的第一次提交没有共同祖先，第一次 push 必然被拒，还得硬合。空仓库最干净。</p>
+</blockquote>
+<h3 id="12-2-源码和产物分两个分支"><a href="#12-2-源码和产物分两个分支" class="headerlink" title="12.2 源码和产物分两个分支"></a>12.2 源码和产物分两个分支</h3><p>这是新手最容易搞乱的地方，记住一句话：<strong><code>main</code> 放你写的 md，<code>gh-pages</code> 放 Hexo 生成的 html</strong>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> <span class="string">&quot;你的博客根目录&quot;</span></span><br><span class="line">git init -b main</span><br><span class="line">git config user.name <span class="string">&quot;你的账号&quot;</span>          <span class="comment"># 只在这个仓库生效，不改全局</span></span><br><span class="line">git config user.email <span class="string">&quot;账号绑定邮箱&quot;</span></span><br><span class="line">git add -A</span><br><span class="line">git commit -m <span class="string">&quot;post: 第一篇文章&quot;</span></span><br><span class="line">git remote add origin ssh://git@ssh.github.com:443/你的用户名/你的仓库名.git</span><br><span class="line">git push -u origin main</span><br></pre></td></tr></table></figure>
+
+<p>然后把 <code>public/</code> 单独推到 <code>gh-pages</code>（用一个临时目录，避免切分支时动到源码）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">TMP=$(<span class="built_in">mktemp</span> -d)</span><br><span class="line"><span class="built_in">cp</span> -r public/. <span class="string">&quot;<span class="variable">$TMP</span>/&quot;</span></span><br><span class="line">git -C <span class="string">&quot;<span class="variable">$TMP</span>&quot;</span> init -b gh-pages -q</span><br><span class="line">git -C <span class="string">&quot;<span class="variable">$TMP</span>&quot;</span> config user.name <span class="string">&quot;你的账号&quot;</span></span><br><span class="line">git -C <span class="string">&quot;<span class="variable">$TMP</span>&quot;</span> config user.email <span class="string">&quot;账号绑定邮箱&quot;</span></span><br><span class="line">git -C <span class="string">&quot;<span class="variable">$TMP</span>&quot;</span> remote add origin ssh://git@ssh.github.com:443/你的用户名/你的仓库名.git</span><br><span class="line">git -C <span class="string">&quot;<span class="variable">$TMP</span>&quot;</span> add -A</span><br><span class="line">git -C <span class="string">&quot;<span class="variable">$TMP</span>&quot;</span> commit -m <span class="string">&quot;deploy: 静态站点&quot;</span></span><br><span class="line">git -C <span class="string">&quot;<span class="variable">$TMP</span>&quot;</span> push -f origin gh-pages</span><br></pre></td></tr></table></figure>
+
+<p>推完 <code>gh-pages</code> 分支，GitHub 通常会<strong>自动启用 Pages</strong>（在仓库 Settings → Pages 里能看到 Source 是 <code>Deploy from a branch / gh-pages / (root)</code>；没自动启用就手动选一下）。</p>
+<blockquote>
+<p>为什么 <code>-f</code> 强制推：每次都是全新的孤立提交，和远端没有共同祖先。这是产物分支，本来就是「<code>public/</code> 的完整镜像」，覆盖是预期行为。<strong>只对 <code>gh-pages</code> 用，别对 <code>main</code> 用</strong>。</p>
+</blockquote>
+<h3 id="12-3-打开网址验收"><a href="#12-3-打开网址验收" class="headerlink" title="12.3 打开网址验收"></a>12.3 打开网址验收</h3><p>站点地址格式：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://你的用户名.github.io/你的仓库名/</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -sS -L -o /dev/null -w <span class="string">&quot;%&#123;http_code&#125;\n&quot;</span> https://你的用户名.github.io/你的仓库名/</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>404</code> → 还在构建，<strong>等 30~90 秒，不要重复发布</strong>（这是最常见的误操作）</li>
+<li><code>200</code> → 起来了</li>
+</ul>
+<p><strong>但 200 还不够</strong>：空页面、模板页也可能返回 200。再抓一次首页 HTML，确认里面有你的站名、文章标题、以及 <code>/你的仓库名/css/style.css</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -sS -L https://你的用户名.github.io/你的仓库名/ | grep -o <span class="string">&quot;你的文章标题&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>全中才说明内容真的渲染出来了。</p>
+<h3 id="12-4-以后每次发文只要一条命令"><a href="#12-4-以后每次发文只要一条命令" class="headerlink" title="12.4 以后每次发文只要一条命令"></a>12.4 以后每次发文只要一条命令</h3><p>把 11.4 + 12.2 固化成一个脚本（本机放在 <code>D:/workbuddy/docs/hexo-deploy.sh</code>），以后：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash hexo-deploy.sh</span><br></pre></td></tr></table></figure>
+
+<p>改文章 → 跑脚本 → 等半分钟 → 网页更新。这就是整套流程的终点。</p>
+<h2 id="第-13-步：日常维护与常见错误"><a href="#第-13-步：日常维护与常见错误" class="headerlink" title="第 13 步：日常维护与常见错误"></a>第 13 步：日常维护与常见错误</h2><table>
+<thead>
+<tr>
+<th>现象</th>
+<th>原因</th>
+<th>怎么修</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>hexo generate</code> 只打印帮助、不报错</td>
+<td><code>package.json</code> 少了 <code>&quot;hexo&quot;</code> 字段</td>
+<td>补回该字段</td>
+</tr>
+<tr>
+<td><code>Author identity unknown</code></td>
+<td>没配 <code>user.name</code> &#x2F; <code>user.email</code></td>
+<td>在仓库里配两条 <code>git config</code></td>
+</tr>
+<tr>
+<td><code>non-fast-forward</code> &#x2F; push 被拒</td>
+<td>建仓库时勾了 README，或忘加 <code>-f</code> 推产物分支</td>
+<td>空仓库重来；只对 <code>gh-pages</code> 用 <code>-f</code></td>
+</tr>
+<tr>
+<td>页面没样式、CSS 404</td>
+<td><code>_config.yml</code> 少 <code>root: /仓库名/</code></td>
+<td>补上重新生成</td>
+</tr>
+<tr>
+<td>突然要求输密码&#x2F;令牌</td>
+<td>SSH 地址被 <code>insteadOf</code> 规则改写成 HTTPS</td>
+<td>用 <code>ssh://git@ssh.github.com:443/...</code> 形式，不匹配该规则</td>
+</tr>
+<tr>
+<td>命令行粘贴令牌没反应</td>
+<td>输密码时屏幕本就不回显</td>
+<td>照常粘贴回车即可</td>
+</tr>
+<tr>
+<td>改了文章，网页没变</td>
+<td>没跑 <code>clean</code> + <code>generate</code>，或没重新推 <code>gh-pages</code></td>
+<td>跑一遍发布脚本</td>
+</tr>
+<tr>
+<td>提交成功但页面 404</td>
+<td>Pages 还在构建</td>
+<td>等，别重复发布</td>
+</tr>
+<tr>
+<td>网页上直接改的 HTML 被冲掉</td>
+<td>产物分支是 <code>public/</code> 的镜像，全量覆盖</td>
+<td>改 <code>source/_posts/</code> 里的 md，重新发布</td>
+</tr>
+</tbody></table>
+<h2 id="术语速查"><a href="#术语速查" class="headerlink" title="术语速查"></a>术语速查</h2><table>
+<thead>
+<tr>
+<th>词</th>
+<th>大白话</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>front-matter</td>
+<td>文章开头 <code>---</code> 包住的几行元数据（标题、日期、分类、标签）</td>
+</tr>
+<tr>
+<td>YAML</td>
+<td>一种「键: 值」的填表格式，front-matter 和 <code>_config.yml</code> 都用它</td>
+</tr>
+<tr>
+<td>产物 &#x2F; <code>public/</code></td>
+<td>Hexo 生成的那一堆 HTML、CSS、JS</td>
+</tr>
+<tr>
+<td>分支</td>
+<td>同一仓库里并行的两份内容；这里 <code>main</code> 存源码、<code>gh-pages</code> 存产物</td>
+</tr>
+<tr>
+<td>Pages</td>
+<td>GitHub 把某个分支当静态网站发布出来的功能</td>
+</tr>
+<tr>
+<td>PAT &#x2F; 令牌</td>
+<td>网站密码的替代品，HTTPS 方式推代码时要用；本流程走 SSH 密钥，用不上</td>
+</tr>
+<tr>
+<td><code>.nojekyll</code></td>
+<td>一个空文件，告诉 Pages「别用 Jekyll 加工，原样发」</td>
+</tr>
+</tbody></table>
+<h2 id="完成检查清单"><a href="#完成检查清单" class="headerlink" title="完成检查清单"></a>完成检查清单</h2><ul>
+<li><input disabled="" type="checkbox"> <code>node/npm/python/git</code> 都能打印版本号</li>
+<li><input disabled="" type="checkbox"> <code>~/.workbuddy/skills/xxx/SKILL.md</code> 有 <code>name</code> &#x2F; <code>description</code> &#x2F; <code>agent_created</code></li>
+<li><input disabled="" type="checkbox"> <code>description</code> 写的是「用户会怎么说」</li>
+<li><input disabled="" type="checkbox"> 示例文件已删</li>
+<li><input disabled="" type="checkbox"> 脚本在临时目录跑通，生成的文件开头是 <code>---</code></li>
+<li><input disabled="" type="checkbox"> 重复运行会拒绝覆盖、路径穿越会被拦</li>
+<li><input disabled="" type="checkbox"> 打包校验通过，拿到 zip</li>
+<li><input disabled="" type="checkbox"> 用 Skill 生成了一篇真实文章</li>
+<li><input disabled="" type="checkbox"> <code>hexo generate</code> 输出里有 <code>generated</code></li>
+<li><input disabled="" type="checkbox"> <code>public/</code> 里有 <code>index.html</code> 和 <code>.nojekyll</code></li>
+<li><input disabled="" type="checkbox"> <code>main</code> 和 <code>gh-pages</code> 都推上去了</li>
+<li><input disabled="" type="checkbox"> 网址返回 200，且页面里能搜到文章标题</li>
+</ul>
+<hr>
+<p>一句话收尾：<strong>Skill 只是一个带说明书的文件夹；Hexo 只负责把 md 变 HTML；GitHub Pages 只负责把 HTML 发出去。</strong> 把这三件事分开，哪一步出错就查哪一步，不用整条链路重来。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://cuishili-git.github.io/ai-agent/2026/11/09/Skill%E5%BC%80%E5%8F%91/%E5%A6%82%E4%BD%95%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA-workbuddy-skill%E4%BB%8E%E9%9C%80%E6%B1%82%E5%88%B0%E6%89%93%E5%8C%85%E7%9A%84%E5%AE%8C%E6%95%B4%E5%A4%8D%E7%9B%98/" data-id="cuidW3z_rS2B-hTZVOkV1aYCY" data-title="从零开发一个 WorkBuddy Skill：新手一步一步做到上线" class="article-share-link"><span class="fa fa-share">分享</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/ai-agent/tags/hexo/" rel="tag">hexo</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/ai-agent/tags/skill/" rel="tag">skill</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/ai-agent/tags/workbuddy/" rel="tag">workbuddy</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/ai-agent/tags/%E6%95%99%E7%A8%8B/" rel="tag">教程</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/ai-agent/tags/%E6%96%B0%E4%BA%BA%E5%90%91/" rel="tag">新人向</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-技术随笔/git-登录与-hexo-博文自动发布" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/ai-agent/2026/11/09/%E6%8A%80%E6%9C%AF%E9%9A%8F%E7%AC%94/git-%E7%99%BB%E5%BD%95%E4%B8%8E-hexo-%E5%8D%9A%E6%96%87%E8%87%AA%E5%8A%A8%E5%8F%91%E5%B8%83/" class="article-date">
+  <time class="dt-published" datetime="2026-11-09T04:02:13.000Z" itemprop="datePublished">2026-11-09</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/ai-agent/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/">技术笔记</a>►<a class="article-category-link" href="/ai-agent/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/Git/">Git</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/ai-agent/2026/11/09/%E6%8A%80%E6%9C%AF%E9%9A%8F%E7%AC%94/git-%E7%99%BB%E5%BD%95%E4%B8%8E-hexo-%E5%8D%9A%E6%96%87%E8%87%AA%E5%8A%A8%E5%8F%91%E5%B8%83/">Git 登录与 Hexo 博文自动发布</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>本次会话先排查了「下载 Git 之后如何登录」，随后开发了一个把本地对话内容发布成 Hexo 博文、并可同步到 WorkBuddy 在线空间的 skill。这里把两段结论沉淀成一篇可发布的笔记。</p>
+<h2 id="结论：Git-本身不需要登录"><a href="#结论：Git-本身不需要登录" class="headerlink" title="结论：Git 本身不需要登录"></a>结论：Git 本身不需要登录</h2><p>Git 是装在电脑上的本地版本控制软件，没有账号体系。日常说的「登录 Git」其实混了三件事：</p>
+<table>
+<thead>
+<tr>
+<th>事项</th>
+<th>在哪做</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>配置提交署名</td>
+<td>本地命令行</td>
+<td><code>user.name</code> &#x2F; <code>user.email</code>，只是给 commit 盖作者章</td>
+</tr>
+<tr>
+<td>注册并登录网站</td>
+<td>浏览器</td>
+<td>GitHub &#x2F; Gitee 等托管平台的账号</td>
+</tr>
+<tr>
+<td>建立认证凭证</td>
+<td>本地 + 网站设置</td>
+<td>SSH 密钥或个人访问令牌，这一步才叫「让 Git 能推拉」</td>
+</tr>
+</tbody></table>
+<p>本机实测结果：Git <code>2.55.0.windows.3</code> 已装好，<code>~/.ssh/id_ed25519</code> 已存在，<code>ssh -T git@github.com</code> 返回 <code>Hi cuishili-git! You&#39;ve successfully authenticated</code> —— 认证通道早就通了，账号是 <code>cuishili-git</code>。唯一缺的是提交署名。</p>
+<p>还有一条容易忽略的全局配置：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">url.https://github.com/.insteadof=git@github.com:</span><br></pre></td></tr></table></figure>
+
+<p>它会把 <code>git@github.com:</code> 开头的 SSH 地址强行改写成 <code>https://github.com/</code>。后果是以为在用 SSH 密钥，实际走 HTTPS，然后莫名弹出要密码或报认证失败。若目标是走 SSH，建议清掉；若本来就用 HTTPS + 令牌，留着也行，但要明白它改写了地址。</p>
+<h2 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h2><ol>
+<li><p>补齐署名，邮箱用平台账号绑定的那个，否则贡献统计和头像对不上：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git config --global user.name <span class="string">&quot;你的名字&quot;</span></span><br><span class="line">git config --global user.email <span class="string">&quot;绑定的邮箱&quot;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>认证优先 SSH：<code>ssh-keygen -t ed25519 -C &quot;邮箱&quot;</code>，把 <code>.pub</code> 内容粘到平台 SSH Keys 设置，再用 <code>ssh -T</code> 验证。</p>
+</li>
+<li><p>HTTPS 路线必须生成个人访问令牌（PAT），主流平台已不接受账号密码；令牌只显示一次，要立刻存好。</p>
+</li>
+</ol>
+<h2 id="坑与权衡"><a href="#坑与权衡" class="headerlink" title="坑与权衡"></a>坑与权衡</h2><table>
+<thead>
+<tr>
+<th>坑</th>
+<th>处理</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>输密码&#x2F;令牌时屏幕不回显</td>
+<td>正常行为，照常粘贴回车</td>
+</tr>
+<tr>
+<td>改过令牌仍报错</td>
+<td>Windows 凭据管理器里删掉旧的 <code>git:https://...</code> 条目</td>
+</tr>
+<tr>
+<td>公司网络封 22 端口</td>
+<td><code>~/.ssh/config</code> 配 <code>ssh.github.com:443</code>，别急着换回 HTTPS</td>
+</tr>
+</tbody></table>
+<h2 id="Hexo-发布-skill-的设计要点"><a href="#Hexo-发布-skill-的设计要点" class="headerlink" title="Hexo 发布 skill 的设计要点"></a>Hexo 发布 skill 的设计要点</h2><ul>
+<li>直接写 front-matter + 正文到 <code>source/_posts</code>，不调用 <code>hexo new</code>，因为后者不接受自定义子目录和多级分类；</li>
+<li>标题含冒号或引号时用 <code>JSON.stringify</code> 生成 YAML 双引号字符串，零依赖解决转义；</li>
+<li>默认只落盘，构建 &#x2F; 部署 &#x2F; 推送 &#x2F; 在线上传都要显式开关，部署与推送还要求 <code>--confirm-*</code> 二次确认；</li>
+<li>同步到 WorkBuddy 在线空间前要剥掉 Hexo front-matter，否则在线文档里会显示成一段原始 YAML 文本；</li>
+<li>Windows 下 <code>npx.cmd --no-install hexo version</code> 会挂住不返回，已从命令探测链中移除，并给所有探测加了超时。</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://cuishili-git.github.io/ai-agent/2026/11/09/%E6%8A%80%E6%9C%AF%E9%9A%8F%E7%AC%94/git-%E7%99%BB%E5%BD%95%E4%B8%8E-hexo-%E5%8D%9A%E6%96%87%E8%87%AA%E5%8A%A8%E5%8F%91%E5%B8%83/" data-id="cuidFWkwTkqazV7k9TEemVSmE" data-title="Git 登录与 Hexo 博文自动发布" class="article-share-link"><span class="fa fa-share">分享</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/ai-agent/tags/git/" rel="tag">git</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/ai-agent/tags/hexo/" rel="tag">hexo</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/ai-agent/tags/workbuddy/" rel="tag">workbuddy</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/ai-agent/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/">技术笔记</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/ai-agent/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/Git/">Git</a></li><li class="category-list-item"><a class="category-list-link" href="/ai-agent/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/WorkBuddy/">WorkBuddy</a></li></ul></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/hexo/" rel="tag">hexo</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/skill/" rel="tag">skill</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/workbuddy/" rel="tag">workbuddy</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/%E6%95%99%E7%A8%8B/" rel="tag">教程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/%E6%96%B0%E4%BA%BA%E5%90%91/" rel="tag">新人向</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/ai-agent/tags/git/" style="font-size: 10px;">git</a> <a href="/ai-agent/tags/hexo/" style="font-size: 20px;">hexo</a> <a href="/ai-agent/tags/skill/" style="font-size: 10px;">skill</a> <a href="/ai-agent/tags/workbuddy/" style="font-size: 20px;">workbuddy</a> <a href="/ai-agent/tags/%E6%95%99%E7%A8%8B/" style="font-size: 10px;">教程</a> <a href="/ai-agent/tags/%E6%96%B0%E4%BA%BA%E5%90%91/" style="font-size: 10px;">新人向</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/ai-agent/archives/2026/11/">十一月 2026</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/ai-agent/2026/11/09/Skill%E5%BC%80%E5%8F%91/%E5%A6%82%E4%BD%95%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA-workbuddy-skill%E4%BB%8E%E9%9C%80%E6%B1%82%E5%88%B0%E6%89%93%E5%8C%85%E7%9A%84%E5%AE%8C%E6%95%B4%E5%A4%8D%E7%9B%98/">从零开发一个 WorkBuddy Skill：新手一步一步做到上线</a>
+          </li>
+        
+          <li>
+            <a href="/ai-agent/2026/11/09/%E6%8A%80%E6%9C%AF%E9%9A%8F%E7%AC%94/git-%E7%99%BB%E5%BD%95%E4%B8%8E-hexo-%E5%8D%9A%E6%96%87%E8%87%AA%E5%8A%A8%E5%8F%91%E5%B8%83/">Git 登录与 Hexo 博文自动发布</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2026 cuishili-git<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/ai-agent/" class="mobile-nav-link">Home</a>
+  
+    <a href="/ai-agent/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/ai-agent/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/ai-agent/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/ai-agent/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
