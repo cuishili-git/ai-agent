@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>串口采集与示波器上位机开发实录：ESP32-P4 + PyQt6 | AI Agent 与 Skill 开发笔记</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="07 · 串口采集与示波器上位机开发实录 2026-11-18 · 用 ESP32-P4 采集 NE555 方波，PyQt6 自研示波器，当天从零到全链路跑通。本文是代码 + 每个坑的根因分析，不是操作教程（操作见 《06 · ESP32-P4 采集 NE555 波形》）。   1. 系统架构1234NE555 模块(12V) ──OUT──[10kΩ]──┬──[3.3kΩ]──GND">
+<meta property="og:type" content="article">
+<meta property="og:title" content="串口采集与示波器上位机开发实录：ESP32-P4 + PyQt6">
+<meta property="og:url" content="https://cuishili-git.github.io/ai-agent/2026/11/18/%E5%B1%80%E6%94%BE%E4%BF%A1%E5%8F%B7%E6%BA%90/%E4%B8%B2%E5%8F%A3%E9%87%87%E9%9B%86%E4%B8%8E%E7%A4%BA%E6%B3%A2%E5%99%A8%E4%B8%8A%E4%BD%8D%E6%9C%BA%E5%BC%80%E5%8F%91%E5%AE%9E%E5%BD%95esp32-p4-pyqt6/index.html">
+<meta property="og:site_name" content="AI Agent 与 Skill 开发笔记">
+<meta property="og:description" content="07 · 串口采集与示波器上位机开发实录 2026-11-18 · 用 ESP32-P4 采集 NE555 方波，PyQt6 自研示波器，当天从零到全链路跑通。本文是代码 + 每个坑的根因分析，不是操作教程（操作见 《06 · ESP32-P4 采集 NE555 波形》）。   1. 系统架构1234NE555 模块(12V) ──OUT──[10kΩ]──┬──[3.3kΩ]──GND">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-11-18T12:29:16.000Z">
+<meta property="article:modified_time" content="2026-11-18T12:29:16.611Z">
+<meta property="article:author" content="cuishili-git">
+<meta property="article:tag" content="esp32">
+<meta property="article:tag" content="pyqt6">
+<meta property="article:tag" content="pyqtgraph">
+<meta property="article:tag" content="串口">
+<meta property="article:tag" content="示波器">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/ai-agent/atom.xml" title="AI Agent 与 Skill 开发笔记" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/ai-agent/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/ai-agent/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/ai-agent/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fork-awesome@1.2.0/css/fork-awesome.min.css">
+
+<meta name="generator" content="Hexo 8.1.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/ai-agent/" id="logo">AI Agent 与 Skill 开发笔记</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/ai-agent/" id="subtitle">把工具链的开发过程写成文章</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/ai-agent/">Home</a>
+        
+          <a class="main-nav-link" href="/ai-agent/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/ai-agent/atom.xml" title="RSS 订阅"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="搜索"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://cuishili-git.github.io/ai-agent"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-局放信号源/串口采集与示波器上位机开发实录esp32-p4-pyqt6" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/ai-agent/2026/11/18/%E5%B1%80%E6%94%BE%E4%BF%A1%E5%8F%B7%E6%BA%90/%E4%B8%B2%E5%8F%A3%E9%87%87%E9%9B%86%E4%B8%8E%E7%A4%BA%E6%B3%A2%E5%99%A8%E4%B8%8A%E4%BD%8D%E6%9C%BA%E5%BC%80%E5%8F%91%E5%AE%9E%E5%BD%95esp32-p4-pyqt6/" class="article-date">
+  <time class="dt-published" datetime="2026-11-18T12:29:16.000Z" itemprop="datePublished">2026-11-18</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/ai-agent/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/">技术笔记</a>►<a class="article-category-link" href="/ai-agent/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/%E7%A1%AC%E4%BB%B6%E5%BC%80%E5%8F%91/">硬件开发</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      串口采集与示波器上位机开发实录：ESP32-P4 + PyQt6
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="07-·-串口采集与示波器上位机开发实录"><a href="#07-·-串口采集与示波器上位机开发实录" class="headerlink" title="07 · 串口采集与示波器上位机开发实录"></a>07 · 串口采集与示波器上位机开发实录</h1><blockquote>
+<p>2026-11-18 · 用 ESP32-P4 采集 NE555 方波，PyQt6 自研示波器，当天从零到全链路跑通。<br>本文是<strong>代码 + 每个坑的根因分析</strong>，不是操作教程（操作见 《06 · ESP32-P4 采集 NE555 波形》）。</p>
+</blockquote>
+<hr>
+<h2 id="1-系统架构"><a href="#1-系统架构" class="headerlink" title="1. 系统架构"></a>1. 系统架构</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">NE555 模块(12V) ──OUT──[10kΩ]──┬──[3.3kΩ]──GND     ← 分压：12V→2.98V，保 GPIO</span><br><span class="line">                               └── GPIO23 (ADC1_CH7)</span><br><span class="line">ESP32-P4 ── 2000Hz 采样 ── CSV 行 ── UART 921600 ── CH343 ── 电脑</span><br><span class="line">电脑 ── PyQt6+pyqtgraph 示波器：触发 / 测量 / 游标 / CSV 保存</span><br></pre></td></tr></table></figure>
+
+<p><strong>带宽账本</strong>（为什么必须 921600）：2000 行&#x2F;s × 每行约 13 字节 ≈ 24 kB&#x2F;s，<br>115200 串口只扛得住 ~11.5 kB&#x2F;s，会丢数据；921600 ≈ 92 kB&#x2F;s，余量近 4 倍。</p>
+<hr>
+<h2 id="2-下位机固件（ESP-IDF-5-5-2，main-test-ne555-c-全文）"><a href="#2-下位机固件（ESP-IDF-5-5-2，main-test-ne555-c-全文）" class="headerlink" title="2. 下位机固件（ESP-IDF 5.5.2，main/test_ne555.c 全文）"></a>2. 下位机固件（ESP-IDF 5.5.2，<code>main/test_ne555.c</code> 全文）</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;freertos/FreeRTOS.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;freertos/task.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;esp_adc/adc_oneshot.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;esp_timer.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;esp_rom_sys.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;driver/uart.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SAMPLE_PERIOD_US  500      <span class="comment">/* 2000 Hz */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ADC_UNIT_ID       ADC_UNIT_1</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ADC_CHANNEL       ADC_CHANNEL_7   <span class="comment">/* GPIO23 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> CONSOLE_BAUD      921600   <span class="comment">/* 硬编码：运行时强制改波特率 */</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">app_main</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/* 0. 控制台 UART 波特率强改 921600（详见坑①） */</span></span><br><span class="line">    ESP_ERROR_CHECK(uart_set_baudrate(CONFIG_ESP_CONSOLE_UART_NUM, CONSOLE_BAUD));</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 1. 打开 ADC1，禁用 ULP */</span></span><br><span class="line">    <span class="type">adc_oneshot_unit_handle_t</span> unit;</span><br><span class="line">    <span class="type">const</span> <span class="type">adc_oneshot_unit_init_cfg_t</span> init_cfg = &#123;</span><br><span class="line">        .unit_id  = ADC_UNIT_ID,</span><br><span class="line">        .ulp_mode = ADC_ULP_MODE_DISABLE,</span><br><span class="line">    &#125;;</span><br><span class="line">    ESP_ERROR_CHECK(adc_oneshot_new_unit(&amp;init_cfg, &amp;unit));</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 2. 通道：12 位 + 12dB 衰减（约 0~3.3V） */</span></span><br><span class="line">    <span class="type">const</span> <span class="type">adc_oneshot_chan_cfg_t</span> chan_cfg = &#123;</span><br><span class="line">        .atten    = ADC_ATTEN_DB_12,</span><br><span class="line">        .bitwidth = ADC_BITWIDTH_12,</span><br><span class="line">    &#125;;</span><br><span class="line">    ESP_ERROR_CHECK(adc_oneshot_config_channel(unit, ADC_CHANNEL, &amp;chan_cfg));</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Format: timestamp_us,raw_adc | GPIO23 / ADC1_CH7 | 2000 Hz | baud 921600\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 3. 采集循环：时间节拍保证严格 2000Hz */</span></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">        <span class="type">int64_t</span> now  = esp_timer_get_time();</span><br><span class="line">        <span class="type">int</span> raw      = <span class="number">0</span>;</span><br><span class="line">        ESP_ERROR_CHECK(adc_oneshot_read(unit, ADC_CHANNEL, &amp;raw));</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%lld,%d\n&quot;</span>, now, raw);</span><br><span class="line"></span><br><span class="line">        <span class="type">int64_t</span> remain = (now + SAMPLE_PERIOD_US) - esp_timer_get_time();</span><br><span class="line">        <span class="keyword">if</span> (remain &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            esp_rom_delay_us((<span class="type">uint32_t</span>)remain);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>三个设计决策的理由</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>决策</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>adc_oneshot</code> 循环，不用 <code>adc_continuous</code>(DMA)</td>
+<td>只要”看到波形”，15 行代码 vs 一整套回调+解析；2000Hz 单次读取绰绰有余。以后做 MHz 级局放再换 DMA</td>
+</tr>
+<tr>
+<td><code>esp_rom_delay_us</code> 忙等对齐节拍</td>
+<td>不用 vTaskDelay（ms 粒度太粗），保证采样间隔严格 500µs，时间戳真实可信</td>
+</tr>
+<tr>
+<td>波特率代码里硬改硬件</td>
+<td><strong>sdkconfig 是生成物</strong>，<code>set-target</code> 会重新生成并冲掉手工修改；<code>uart_set_baudrate</code> 直接写硬件寄存器，不依赖驱动安装，谁也冲不掉</td>
+</tr>
+</tbody></table>
+<p><strong><code>main/CMakeLists.txt</code>（有陷阱，见坑⑤）</strong>：</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">idf_component_register(SRCS <span class="string">&quot;test_ne555.c&quot;</span></span><br><span class="line">                    INCLUDE_DIRS <span class="string">&quot;.&quot;</span></span><br><span class="line">                    PRIV_REQUIRES esp_driver_uart esp_adc esp_timer)</span><br></pre></td></tr></table></figure>
+
+<p><strong><code>sdkconfig.defaults</code></strong>（双保险）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># NE555 采集需要流式输出 CSV，115200 带宽不够（约24kB/s 数据量）</span><br><span class="line">CONFIG_ESP_CONSOLE_UART_BAUDRATE=921600</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="3-上位机关键代码（PyQt6-pyqtgraph，单文件-scope-app-py）"><a href="#3-上位机关键代码（PyQt6-pyqtgraph，单文件-scope-app-py）" class="headerlink" title="3. 上位机关键代码（PyQt6 + pyqtgraph，单文件 scope_app.py）"></a>3. 上位机关键代码（PyQt6 + pyqtgraph，单文件 <code>scope_app.py</code>）</h2><h3 id="3-1-串口线程：SerialWorker（QThread）"><a href="#3-1-串口线程：SerialWorker（QThread）" class="headerlink" title="3.1 串口线程：SerialWorker（QThread）"></a>3.1 串口线程：SerialWorker（QThread）</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">SerialWorker</span>(<span class="title class_ inherited__">QThread</span>):</span><br><span class="line">    sample = pyqtSignal(<span class="built_in">float</span>, <span class="built_in">int</span>)      <span class="comment"># t_us, raw</span></span><br><span class="line">    status = pyqtSignal(<span class="built_in">str</span>)</span><br><span class="line">    error  = pyqtSignal(<span class="built_in">str</span>)             <span class="comment"># 打开失败 → 界面复位</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">run</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">import</span> serial</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            ser = serial.Serial(<span class="variable language_">self</span>.port, <span class="variable language_">self</span>.baud, timeout=<span class="number">0.1</span>)</span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">            <span class="variable language_">self</span>.error.emit(<span class="string">f&#x27;打开 <span class="subst">&#123;self.port&#125;</span> 失败: <span class="subst">&#123;e&#125;</span>&#x27;</span>)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        n_rx = n_ok = n_bytes = <span class="number">0</span>        <span class="comment"># 原始行 / 解析成功 / 字节</span></span><br><span class="line">        shown = <span class="number">0</span></span><br><span class="line">        last_stat = time.time()</span><br><span class="line">        <span class="keyword">while</span> <span class="keyword">not</span> <span class="variable language_">self</span>._stop:</span><br><span class="line">            raw = ser.readline()</span><br><span class="line">            <span class="keyword">if</span> raw:</span><br><span class="line">                n_bytes += <span class="built_in">len</span>(raw); n_rx += <span class="number">1</span></span><br><span class="line">                <span class="keyword">if</span> shown &lt; <span class="number">3</span>:            <span class="comment"># 控制台打印前3行原始数据，定位乱码</span></span><br><span class="line">                    <span class="built_in">print</span>(<span class="string">f&#x27;[scope] 串口原始第 <span class="subst">&#123;shown+<span class="number">1</span>&#125;</span> 行: <span class="subst">&#123;raw[:<span class="number">64</span>]!r&#125;</span>&#x27;</span>, flush=<span class="literal">True</span>)</span><br><span class="line">                    shown += <span class="number">1</span></span><br><span class="line">            line = raw.decode(<span class="string">&#x27;ascii&#x27;</span>, errors=<span class="string">&#x27;ignore&#x27;</span>).strip()</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;,&#x27;</span> <span class="keyword">in</span> line:</span><br><span class="line">                parts = line.split(<span class="string">&#x27;,&#x27;</span>)</span><br><span class="line">                <span class="keyword">try</span>:</span><br><span class="line">                    t_us, raw_adc = <span class="built_in">float</span>(parts[<span class="number">0</span>]), <span class="built_in">int</span>(parts[<span class="number">1</span>])</span><br><span class="line">                <span class="keyword">except</span> ValueError:</span><br><span class="line">                    <span class="keyword">continue</span></span><br><span class="line">                n_ok += <span class="number">1</span></span><br><span class="line">                <span class="variable language_">self</span>.sample.emit(t_us / <span class="number">1e6</span>, <span class="built_in">max</span>(<span class="number">0</span>, <span class="built_in">min</span>(RAW_MAX, raw_adc)))</span><br><span class="line">            <span class="keyword">if</span> time.time() - last_stat &gt;= <span class="number">1.0</span>:   <span class="comment"># 每秒刷新接收统计</span></span><br><span class="line">                <span class="variable language_">self</span>.status.emit(<span class="string">f&#x27;接收统计: <span class="subst">&#123;n_bytes&#125;</span> 字节 / <span class="subst">&#123;n_rx&#125;</span> 行原始, 解析成功 <span class="subst">&#123;n_ok&#125;</span>&#x27;</span>)</span><br><span class="line">                last_stat = time.time()</span><br><span class="line">        ser.close()</span><br></pre></td></tr></table></figure>
+
+<p><strong>设计要点</strong>：</p>
+<ul>
+<li><strong>收数在 QThread，绘图在主线程</strong>——串口阻塞绝不卡 UI，中间靠 <code>pyqtSignal</code> 跨线程投递（Qt 自动排队，线程安全）。</li>
+<li><strong>接收统计是排障神器</strong>：<code>字节&gt;0 且解析=0</code> → 波特率错（乱码）；<code>字节=0</code> → 固件没跑；<code>解析在涨</code> → 链路通。三行日志把”没数据”这种模糊故障切成三种确定状态。</li>
+<li><strong>失败走 <code>error</code> 信号</strong>：打开串口失败时主线程复位按钮&#x2F;标签并亮出错误文本，不让界面说谎（曾出现过”标签显示已连接实际打开失败”的误导）。</li>
+</ul>
+<h3 id="3-2-边沿测量：线性插值过阈检测"><a href="#3-2-边沿测量：线性插值过阈检测" class="headerlink" title="3.2 边沿测量：线性插值过阈检测"></a>3.2 边沿测量：线性插值过阈检测</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">edge_crossings</span>(<span class="params">t, v, level, rising=<span class="literal">True</span></span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;返回信号穿越 level 的精确时间点（线性插值）。&quot;&quot;&quot;</span></span><br><span class="line">    t, v = np.asarray(t), np.asarray(v)</span><br><span class="line">    s = v - level</span><br><span class="line">    idx = np.where((s[:-<span class="number">1</span>] &lt; <span class="number">0</span>) &amp; (s[<span class="number">1</span>:] &gt;= <span class="number">0</span>))[<span class="number">0</span>] <span class="keyword">if</span> rising <span class="keyword">else</span> \</span><br><span class="line">          np.where((s[:-<span class="number">1</span>] &gt;= <span class="number">0</span>) &amp; (s[<span class="number">1</span>:] &lt; <span class="number">0</span>))[<span class="number">0</span>]</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(idx) == <span class="number">0</span>:</span><br><span class="line">        <span class="keyword">return</span> np.array([])</span><br><span class="line">    frac = -s[idx] / (s[idx + <span class="number">1</span>] - s[idx])       <span class="comment"># 线性插值出亚采样周期精度</span></span><br><span class="line">    <span class="keyword">return</span> t[idx] + frac * (t[idx + <span class="number">1</span>] - t[idx])</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">measure_wave</span>(<span class="params">t, v</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;自动测量：频率/周期/占空比/电平（直流幅度&lt;0.05V 判为直流）。&quot;&quot;&quot;</span></span><br><span class="line">    ...</span><br><span class="line">    rising = edge_crossings(t, v, mid, rising=<span class="literal">True</span>)</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(rising) &gt;= <span class="number">3</span>:</span><br><span class="line">        period = <span class="built_in">float</span>(np.median(np.diff(rising)))   <span class="comment"># 中位数抗单周期抖动</span></span><br><span class="line">        out[<span class="string">&#x27;freq&#x27;</span>] = <span class="number">1.0</span> / period</span><br><span class="line">        falling = edge_crossings(t, v, mid, rising=<span class="literal">False</span>)</span><br><span class="line">        hi = [<span class="built_in">float</span>(np.<span class="built_in">min</span>(falling[falling &gt; r] - r))</span><br><span class="line">              <span class="keyword">for</span> r <span class="keyword">in</span> rising[:-<span class="number">1</span>] <span class="keyword">if</span> np.<span class="built_in">any</span>(falling &gt; r)]</span><br><span class="line">        out[<span class="string">&#x27;duty&#x27;</span>] = <span class="built_in">float</span>(np.median(hi)) / period</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>用<strong>上升沿间隔的中位数</strong>求周期——单个异常沿不会污染读数。</li>
+<li>占空比 &#x3D; 每个上升沿到下一个下降沿的中位时长 ÷ 周期。</li>
+<li>电平用 90&#x2F;10 百分位而不是 max&#x2F;min——抗毛刺。</li>
+</ul>
+<h3 id="3-3-边沿触发提取（波形稳定不漂的核心）"><a href="#3-3-边沿触发提取（波形稳定不漂的核心）" class="headerlink" title="3.3 边沿触发提取（波形稳定不漂的核心）"></a>3.3 边沿触发提取（波形稳定不漂的核心）</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">_extract_window</span>(<span class="params">self, t, v, window, trig_on, level</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;返回 [(t_rel, v), ...]，t_rel 相对触发点。window=全屏跨度(秒)。&quot;&quot;&quot;</span></span><br><span class="line">    pre, post = window * <span class="number">0.1</span>, window * <span class="number">0.9</span></span><br><span class="line">    <span class="keyword">if</span> trig_on:</span><br><span class="line">        lv = vmin + (vmax - vmin) * (<span class="variable language_">self</span>.sld_trig.value() / <span class="number">100.0</span>)</span><br><span class="line">        <span class="keyword">if</span> vmax - vmin &gt; <span class="number">0.05</span>:</span><br><span class="line">            cross = edge_crossings(t, v, lv, rising=<span class="literal">True</span>)</span><br><span class="line">            <span class="comment"># 最后一个能放下完整窗口的触发点</span></span><br><span class="line">            good = cross[(cross - pre &gt;= t[<span class="number">0</span>]) &amp; (cross + post &lt;= t_end)]</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">len</span>(good):</span><br><span class="line">                t0 = <span class="built_in">float</span>(good[-<span class="number">1</span>])</span><br><span class="line">                sel = (t &gt;= t0 - pre) &amp; (t &lt;= t0 + post)</span><br><span class="line">                <span class="keyword">return</span> <span class="built_in">list</span>(<span class="built_in">zip</span>(t[sel] - t0, v[sel])), <span class="literal">True</span>, t0</span><br><span class="line">    t0 = t_end - post            <span class="comment"># 触发丢失 → 退化为滚动窗口</span></span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<p>每次刷新都重新搜”最后一个满足窗口约束的上升沿”→ 波形始终以触发沿为 x&#x3D;0 对齐 → 静止不漂。找不到边沿自动退化为滚动模式。</p>
+<h3 id="3-4-时基语义（示波器惯例）"><a href="#3-4-时基语义（示波器惯例）" class="headerlink" title="3.4 时基语义（示波器惯例）"></a>3.4 时基语义（示波器惯例）</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">TIMEBASES = [(<span class="string">&#x27;10 ms&#x27;</span>, <span class="number">0.010</span>), ..., (<span class="string">&#x27;1 s&#x27;</span>, <span class="number">1.000</span>), (<span class="string">&#x27;2 s&#x27;</span>, <span class="number">2.000</span>)]  <span class="comment"># 值=每格宽度</span></span><br><span class="line">window = TIMEBASES[index][<span class="number">1</span>] * <span class="number">10.0</span>        <span class="comment"># 全屏 10 格</span></span><br><span class="line"><span class="variable language_">self</span>.plot.setXRange(-pre, post, padding=<span class="number">0</span>) <span class="comment"># X 视窗锁定，防自动拉伸出空白</span></span><br></pre></td></tr></table></figure>
+
+<p>缓冲区 <code>BUF_SEC = 22s</code>，必须 ≥ 最大时基（2s&#x2F;格×10格）。</p>
+<hr>
+<h2 id="4-踩坑全记录（当天实战，7-个坑）"><a href="#4-踩坑全记录（当天实战，7-个坑）" class="headerlink" title="4. 踩坑全记录（当天实战，7 个坑）"></a>4. 踩坑全记录（当天实战，7 个坑）</h2><table>
+<thead>
+<tr>
+<th>#</th>
+<th>现象</th>
+<th>根因</th>
+<th>修法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>①</td>
+<td>反复改波特率不生效</td>
+<td><code>sdkconfig</code> 是<strong>生成物</strong>，<code>set-target</code> 重新生成冲掉手工修改；<code>sdkconfig.defaults</code> 优先级又低于目标默认</td>
+<td><strong>代码里 <code>uart_set_baudrate()</code> 硬改硬件</strong>，绕过整个配置体系</td>
+</tr>
+<tr>
+<td>②</td>
+<td>打开 COM3 没有权限</td>
+<td>Windows 串口<strong>独占</strong>：自己前一个实例 &#x2F; idf.py monitor 还开着</td>
+<td>找到旧窗口关掉；monitor 用 <code>Ctrl+]</code> 退出</td>
+</tr>
+<tr>
+<td>③</td>
+<td><code>connect_serial</code> AttributeError</td>
+<td><code>__init__</code> 引用了不存在的方法（按钮走的 <code>on_connect</code> 没被复用）</td>
+<td>命令行 <code>--port</code> 也走 <code>on_connect()</code> 统一路径</td>
+</tr>
+<tr>
+<td>④</td>
+<td><code>esp_timer.h: No such file</code></td>
+<td><code>main</code> 组件一旦显式写 <code>PRIV_REQUIRES</code>，就<strong>失去自动依赖全部组件</strong>的特权</td>
+<td><code>esp_driver_uart esp_adc esp_timer</code> 三个都显式列上</td>
+</tr>
+<tr>
+<td>⑤</td>
+<td>波形只有一条竖线</td>
+<td>Y 轴锁死 <code>(-0.25, 3.65)</code>，而换算满量程 4.4V → 高电平 4.17V <strong>被裁在屏幕外</strong></td>
+<td>Y 轴扩到 <code>(-0.3, 4.8)</code>，两处口径必须一致</td>
+</tr>
+<tr>
+<td>⑥</td>
+<td>一屏只有一个周期</td>
+<td>时基值被当成”全屏宽度”，示波器惯例是<strong>每格</strong>宽度（×10 格）</td>
+<td><code>window = 档位值 × 10</code>；缓冲扩到 22s</td>
+</tr>
+<tr>
+<td>⑦</td>
+<td>轴标 18ms 实际是 18 秒</td>
+<td>数据单位是秒，轴标签却写 <code>units=&#39;ms&#39;</code>，pyqtgraph 按标签口径显示</td>
+<td><code>units=&#39;s&#39;</code>（pyqtgraph 会按视窗自动切 ms 前缀）</td>
+</tr>
+</tbody></table>
+<p>另外两个通用陷阱：</p>
+<ul>
+<li><strong><code>np.min(arr, initial=np.nan)</code> NaN 传播</strong>：数组非空也返回 nan，占空比永远算不出来 → 显式判空。</li>
+<li><strong>pyqtgraph 0.14 移除了 <code>enableMenu</code></strong>：升级后旧 API 直接 AttributeError，删掉即可（右键导出菜单反而有用）。</li>
+</ul>
+<hr>
+<h2 id="5-当天实测结论"><a href="#5-当天实测结论" class="headerlink" title="5. 当天实测结论"></a>5. 当天实测结论</h2><table>
+<thead>
+<tr>
+<th>项</th>
+<th>数值</th>
+<th>意义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>采样率</td>
+<td>1973~1997 &#x2F;s</td>
+<td>目标 2000Hz，printf 开销占用 ~1.3%，达标</td>
+</tr>
+<tr>
+<td>NE555 高电平</td>
+<td>raw ≈ 3877（显示 4.17V，实际引脚 ≈3.0V）</td>
+<td><strong>模块 OUT 直出 12V（无内置 7805）</strong>——高压区验源判据按此定</td>
+</tr>
+<tr>
+<td>NE555 低电平</td>
+<td>raw ≈ 2（0.001V）</td>
+<td>分压链干净</td>
+</tr>
+<tr>
+<td>当前模块频率</td>
+<td>~1.8Hz（电位器在最低频端）</td>
+<td>待拧到 100Hz&#x2F;50Hz</td>
+</tr>
+</tbody></table>
+<p><strong>遗留</strong>：① 电位器拧到 100Hz&#x2F;50Hz 后复测记录；② 该模块频率范围下限太低，如果拧到头仍达不到 100Hz，需并电容改定时网络。</p>
+<hr>
+<p><em>文件位置：固件 <code>D:\esp32\p4\my\test_ne555\</code>，上位机 <code>D:\esp32\p4\my\test_ne555\python\scope_app.py</code>（单文件，依赖 PyQt6+pyqtgraph+pyserial）</em></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://cuishili-git.github.io/ai-agent/2026/11/18/%E5%B1%80%E6%94%BE%E4%BF%A1%E5%8F%B7%E6%BA%90/%E4%B8%B2%E5%8F%A3%E9%87%87%E9%9B%86%E4%B8%8E%E7%A4%BA%E6%B3%A2%E5%99%A8%E4%B8%8A%E4%BD%8D%E6%9C%BA%E5%BC%80%E5%8F%91%E5%AE%9E%E5%BD%95esp32-p4-pyqt6/" data-id="cuidoNPScehNSau5HNTMEutCP" data-title="串口采集与示波器上位机开发实录：ESP32-P4 + PyQt6" class="article-share-link"><span class="fa fa-share">分享</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/ai-agent/tags/esp32/" rel="tag">esp32</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/ai-agent/tags/pyqt6/" rel="tag">pyqt6</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/ai-agent/tags/pyqtgraph/" rel="tag">pyqtgraph</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/ai-agent/tags/%E4%B8%B2%E5%8F%A3/" rel="tag">串口</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/ai-agent/tags/%E7%A4%BA%E6%B3%A2%E5%99%A8/" rel="tag">示波器</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/ai-agent/2026/11/18/%E5%B1%80%E6%94%BE%E4%BF%A1%E5%8F%B7%E6%BA%90/esp32-p4-%E9%87%87%E9%9B%86-ne555-%E6%B3%A2%E5%BD%A2%E4%BB%8A%E5%A4%A9%E5%B0%B1%E8%83%BD%E5%81%9A/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">前一篇</strong>
+      <div class="article-nav-title">
+        
+          ESP32-P4 采集 NE555 波形，今天就能做
+        
+      </div>
+    </a>
+  
+  
+    <a href="/ai-agent/2026/11/09/Skill%E5%BC%80%E5%8F%91/%E5%A6%82%E4%BD%95%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA-workbuddy-skill%E4%BB%8E%E9%9C%80%E6%B1%82%E5%88%B0%E6%89%93%E5%8C%85%E7%9A%84%E5%AE%8C%E6%95%B4%E5%A4%8D%E7%9B%98/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">后一篇</strong>
+      <div class="article-nav-title">从零开发一个 WorkBuddy Skill：新手一步一步做到上线</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/ai-agent/categories/%E5%AE%9E%E6%88%98%E7%BB%8F%E9%AA%8C/">实战经验</a></li><li class="category-list-item"><a class="category-list-link" href="/ai-agent/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/">技术笔记</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/ai-agent/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/Git/">Git</a></li><li class="category-list-item"><a class="category-list-link" href="/ai-agent/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/WorkBuddy/">WorkBuddy</a></li><li class="category-list-item"><a class="category-list-link" href="/ai-agent/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/%E7%A1%AC%E4%BB%B6%E5%BC%80%E5%8F%91/">硬件开发</a></li></ul></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/adc/" rel="tag">adc</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/esp32/" rel="tag">esp32</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/hexo/" rel="tag">hexo</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/ne555/" rel="tag">ne555</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/pyqt6/" rel="tag">pyqt6</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/pyqtgraph/" rel="tag">pyqtgraph</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/skill/" rel="tag">skill</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/workbuddy/" rel="tag">workbuddy</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/%E4%B8%B2%E5%8F%A3/" rel="tag">串口</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/%E5%AE%89%E8%A3%85/" rel="tag">安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/%E5%AE%9E%E6%88%98%E7%BB%8F%E9%AA%8C/" rel="tag">实战经验</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/%E6%95%99%E7%A8%8B/" rel="tag">教程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag">数据库</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/%E6%96%B0%E4%BA%BA%E5%90%91/" rel="tag">新人向</a></li><li class="tag-list-item"><a class="tag-list-link" href="/ai-agent/tags/%E7%A4%BA%E6%B3%A2%E5%99%A8/" rel="tag">示波器</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/ai-agent/tags/adc/" style="font-size: 10px;">adc</a> <a href="/ai-agent/tags/esp32/" style="font-size: 20px;">esp32</a> <a href="/ai-agent/tags/git/" style="font-size: 10px;">git</a> <a href="/ai-agent/tags/hexo/" style="font-size: 20px;">hexo</a> <a href="/ai-agent/tags/mysql/" style="font-size: 10px;">mysql</a> <a href="/ai-agent/tags/ne555/" style="font-size: 10px;">ne555</a> <a href="/ai-agent/tags/pyqt6/" style="font-size: 10px;">pyqt6</a> <a href="/ai-agent/tags/pyqtgraph/" style="font-size: 10px;">pyqtgraph</a> <a href="/ai-agent/tags/skill/" style="font-size: 10px;">skill</a> <a href="/ai-agent/tags/workbuddy/" style="font-size: 20px;">workbuddy</a> <a href="/ai-agent/tags/%E4%B8%B2%E5%8F%A3/" style="font-size: 10px;">串口</a> <a href="/ai-agent/tags/%E5%AE%89%E8%A3%85/" style="font-size: 10px;">安装</a> <a href="/ai-agent/tags/%E5%AE%9E%E6%88%98%E7%BB%8F%E9%AA%8C/" style="font-size: 10px;">实战经验</a> <a href="/ai-agent/tags/%E6%95%99%E7%A8%8B/" style="font-size: 10px;">教程</a> <a href="/ai-agent/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" style="font-size: 10px;">数据库</a> <a href="/ai-agent/tags/%E6%96%B0%E4%BA%BA%E5%90%91/" style="font-size: 10px;">新人向</a> <a href="/ai-agent/tags/%E7%A4%BA%E6%B3%A2%E5%99%A8/" style="font-size: 20px;">示波器</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/ai-agent/archives/2026/11/">十一月 2026</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/ai-agent/2026/11/21/%E5%AE%9E%E6%88%98%E7%BB%8F%E9%AA%8C/mysql-57-%E4%B8%8B%E8%BD%BD%E5%AE%89%E8%A3%85%E5%85%A8%E6%B5%81%E7%A8%8B%E4%BB%8E%E8%B8%A9%E5%9D%91%E5%88%B0%E4%B8%80%E9%94%AE%E9%83%A8%E7%BD%B2/">MySQL 5.7 下载安装全流程：从踩坑到一键部署</a>
+          </li>
+        
+          <li>
+            <a href="/ai-agent/2026/11/18/%E5%B1%80%E6%94%BE%E4%BF%A1%E5%8F%B7%E6%BA%90/esp32-p4-%E9%87%87%E9%9B%86-ne555-%E6%B3%A2%E5%BD%A2%E4%BB%8A%E5%A4%A9%E5%B0%B1%E8%83%BD%E5%81%9A/">ESP32-P4 采集 NE555 波形，今天就能做</a>
+          </li>
+        
+          <li>
+            <a href="/ai-agent/2026/11/18/%E5%B1%80%E6%94%BE%E4%BF%A1%E5%8F%B7%E6%BA%90/%E4%B8%B2%E5%8F%A3%E9%87%87%E9%9B%86%E4%B8%8E%E7%A4%BA%E6%B3%A2%E5%99%A8%E4%B8%8A%E4%BD%8D%E6%9C%BA%E5%BC%80%E5%8F%91%E5%AE%9E%E5%BD%95esp32-p4-pyqt6/">串口采集与示波器上位机开发实录：ESP32-P4 + PyQt6</a>
+          </li>
+        
+          <li>
+            <a href="/ai-agent/2026/11/09/Skill%E5%BC%80%E5%8F%91/%E5%A6%82%E4%BD%95%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA-workbuddy-skill%E4%BB%8E%E9%9C%80%E6%B1%82%E5%88%B0%E6%89%93%E5%8C%85%E7%9A%84%E5%AE%8C%E6%95%B4%E5%A4%8D%E7%9B%98/">从零开发一个 WorkBuddy Skill：新手一步一步做到上线</a>
+          </li>
+        
+          <li>
+            <a href="/ai-agent/2026/11/09/%E6%8A%80%E6%9C%AF%E9%9A%8F%E7%AC%94/git-%E7%99%BB%E5%BD%95%E4%B8%8E-hexo-%E5%8D%9A%E6%96%87%E8%87%AA%E5%8A%A8%E5%8F%91%E5%B8%83/">Git 登录与 Hexo 博文自动发布</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2026 cuishili-git<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/ai-agent/" class="mobile-nav-link">Home</a>
+  
+    <a href="/ai-agent/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/ai-agent/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/ai-agent/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/ai-agent/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
